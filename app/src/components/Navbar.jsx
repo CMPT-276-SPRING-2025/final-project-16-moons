@@ -1,5 +1,7 @@
-import React from 'react'
-import Logo from '../assets/airplane-icon.svg'
+import React from 'react';
+import Logo from '../assets/airplane-icon.svg'; // ** Placeholder logo
+import {Link} from 'react-router-dom';
+import '../styles/Navbar.css';
 
 function Navbar() {
   return (
@@ -7,7 +9,12 @@ function Navbar() {
         <div className='leftSide'>
             <img src={Logo} />
         </div>
-        <div className='rightSide'></div>
+        <div className='rightSide'>
+          <Link to='/'>Home</Link>  
+          <Link to='/calendar'>Calendar</Link>  
+          <Link to='/flights'>Flights</Link>  
+          <Link to='/attractions'>Attractions</Link>  
+        </div>
     </div>
   )
 }
