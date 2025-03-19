@@ -5,6 +5,11 @@
   height: 100vh;          
 }
 
+body {
+  padding: 0;
+  margin: 0;
+}
+
 /* Commented out base css */
 
 /* #root {
