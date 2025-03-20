@@ -1,6 +1,6 @@
   // Attractions page main file
 
-  import BackgroundImage from '../assets/attractions-background.jpg';
+  import BackgroundImage from '../assets/attractions-background.jpeg';
   import '../styles/Attractions.css';
   import { SearchBar } from "../components/SearchBar.jsx";
 
