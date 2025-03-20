@@ -13,12 +13,31 @@
     padding: 0;
   }
 
-.search-bar-container {
-    padding-top: 20vh;
+  .headerContainer {
+    width: auto;
+    margin-left: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-left: 0;
+  }
+  
+  .headerContainer h1 {
+    justify-content: center;
+    align-items: center;
+    font-size: 90px;
+    height: 60px;
+    font-weight: 50;
+    color: black;
+  }
+
+  .search-bar-container {
+    padding-top: 5vh;
     width: 40%;
-    margin: auto;
+    margin: 5px;
     display: flex;
     flex-direction: column;
     align-items:center;
     min-width: 200px;
-}
+  }

@@ -24,4 +24,5 @@ input:focus {
 
 #search-icon {
     color: #333;
+    cursor: pointer;
 }

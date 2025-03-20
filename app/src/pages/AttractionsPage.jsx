@@ -2,7 +2,8 @@
 
   import BackgroundImage from '../assets/attractions-background.jpeg';
   import '../styles/Attractions.css';
-  import { SearchBar } from "../components/SearchBar.jsx";
+  import { SearchBar } from "../components/SearchBar";
+  import { useState } from "react";
 
 function Attractions() {
   return (
