@@ -8,6 +8,7 @@
 - Logo to replace placeholder logo
 - Find replacements for footer icons
 - footer icons need links
+- [react-calendar documentation](https://www.npmjs.com/package/react-calendar)
 
 ## Group Members
 Rohin Aulakh<br>
