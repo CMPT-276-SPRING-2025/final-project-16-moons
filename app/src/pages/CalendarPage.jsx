@@ -49,6 +49,7 @@ function CalendarPage() {
               <div className='calendarContainer'>
                   <Calendar
                       calendarType='gregory'
+                      showNeighboringMonth={false}
                       onClickDay={handleDateSelection}
                       tileClassName={({ date }) =>
                           (startDate && date.toDateString() === startDate.toDateString()) ||
