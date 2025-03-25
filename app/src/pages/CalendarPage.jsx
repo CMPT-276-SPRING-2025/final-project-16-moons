@@ -35,6 +35,12 @@ function CalendarPage() {
         }
     };
 
+    const handleCancel = () => {
+        setStartDate(null);
+        setEndDate(null);
+        setEventDetails({ name: '', description: '', color: '#ff0000' });
+    };
+
     return (
         <div className='calendar' style={{ backgroundImage: `url(${BackgroundImage})` }}>
             <div className='headerContainer'>
@@ -80,7 +86,7 @@ function CalendarPage() {
                             />
                         </div>
                         <button type='submit'>Add Event</button>
-
+                        <button type='button' onClick={handleCancel} className='cancelButton'>Cancel</button>
                     </form>
                 )}
 
