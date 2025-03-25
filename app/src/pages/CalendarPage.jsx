@@ -28,7 +28,11 @@ function CalendarPage() {
         e.preventDefault();
         if (startDate && endDate) {
             const newEvent = { ...eventDetails, startDate, endDate };
-            setEvents([...events, newEvent]);
+            const sortedEvents = [...events, newEvent].sort(
+                (a, b) => new Date(a.startDate) - new Date(b.startDate)
+            );
+    
+            setEvents(sortedEvents);
             setStartDate(null);
             setEndDate(null);
             setEventDetails({ name: '', description: '', color: '#2196F3' });
