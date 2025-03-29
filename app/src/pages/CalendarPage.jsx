@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import BackgroundImage from '../assets/calendar-background.jpg';
 import Calendar from 'react-calendar';
+import ColorLensIcon from '@mui/icons-material/ColorLens';
 import '../styles/Calendar.css';
 
 function CalendarPage() {
@@ -9,6 +10,8 @@ function CalendarPage() {
     const [endDate, setEndDate] = useState(null);
     const [eventDetails, setEventDetails] = useState({ name: '', description: '', color: '#ff0000' });
     const [events, setEvents] = useState([]);
+    const [startTime, setStartTime] = useState('00:00');
+    const [endTime, setEndTime] = useState('23:59');
 
     const handleDateSelection = (date) => {
         if (!startDate) {
@@ -27,7 +30,12 @@ function CalendarPage() {
     const handleEventSubmit = (e) => {
         e.preventDefault();
         if (startDate && endDate) {
-            const newEvent = { ...eventDetails, startDate, endDate };
+            const newEvent = {
+                ...eventDetails,
+                startDate: `${startDate.toDateString()} ${startTime}`, 
+                endDate: `${endDate.toDateString()} ${endTime}`
+            };
+
             const sortedEvents = [...events, newEvent].sort(
                 (a, b) => new Date(a.startDate) - new Date(b.startDate)
             );
@@ -35,6 +43,8 @@ function CalendarPage() {
             setEvents(sortedEvents);
             setStartDate(null);
             setEndDate(null);
+            setStartTime('');
+            setEndTime('');
             setEventDetails({ name: '', description: '', color: '#2196F3' });
         }
     };
@@ -66,7 +76,7 @@ function CalendarPage() {
                 </div>
 
                 {startDate && endDate && (
-                    /* date forms*/
+                    /* EVENT FORM*/
                     <form className='eventForm' onSubmit={handleEventSubmit}>
                         <input
                             type='text'
@@ -80,6 +90,28 @@ function CalendarPage() {
                             value={eventDetails.description}
                             onChange={(e) => setEventDetails({ ...eventDetails, description: e.target.value })}
                         />
+                        <div className='timePickerContainer'>
+                            <div className='startTime'>
+                                <label htmlFor='startTime'>Start time:</label>
+                                <input
+                                    type='time'
+                                    id='startTime'
+                                    value={startTime}
+                                    onChange={(e) => setStartTime(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className='endTime'>
+                                <label htmlFor='endTime'>End time:</label>
+                                <input
+                                    type='time'
+                                    id='endTime'
+                                    value={endTime}
+                                    onChange={(e) => setEndTime(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </div>
                         <div className='colorPickerContainer'>
                             <label htmlFor='eventColor'>Click to select colour:</label>
                             <input
