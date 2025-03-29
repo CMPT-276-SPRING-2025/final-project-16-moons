@@ -30,12 +30,19 @@ function CalendarPage() {
     const handleEventSubmit = (e) => {
         e.preventDefault();
         if (startDate && endDate) {
+            const start = new Date(startDate);
+            start.setHours(...startTime.split(':').map(Number)); // set hrs and mins
+    
+            const end = new Date(endDate);
+            end.setHours(...endTime.split(':').map(Number)); // set hrs and mins
+    
             const newEvent = {
                 ...eventDetails,
-                startDate: `${startDate.toDateString()} ${startTime}`, 
-                endDate: `${endDate.toDateString()} ${endTime}`
+                color: eventDetails.color,
+                startDate: start,  // stores as 'Date' object
+                endDate: end
             };
-
+    
             const sortedEvents = [...events, newEvent].sort(
                 (a, b) => new Date(a.startDate) - new Date(b.startDate)
             );
@@ -43,9 +50,9 @@ function CalendarPage() {
             setEvents(sortedEvents);
             setStartDate(null);
             setEndDate(null);
-            setStartTime('');
-            setEndTime('');
-            setEventDetails({ name: '', description: '', color: '#2196F3' });
+            setStartTime('00:00');
+            setEndTime('23:59');
+            setEventDetails({ name: '', description: '', color: '#ff0000' });
         }
     };
 
@@ -114,10 +121,22 @@ function CalendarPage() {
                         </div>
                         <div className='colorPickerContainer'>
                             <label htmlFor='eventColor'>Click to select colour:</label>
+                            <button
+                                type='button'
+                                className='colorButton'
+                                onClick={(e) => {
+                                    e.preventDefault(); // Prevents accidental submission
+                                    document.getElementById('hiddenColorInput').click();
+                                }}
+                                style={{ color: eventDetails.color }}
+                            >
+                                <ColorLensIcon />
+                            </button>
                             <input
                                 type='color'
+                                id='hiddenColorInput'
+                                style={{ display: 'none' }} // hide input field
                                 value={eventDetails.color}
-                                // copy eventDetails into new object, set color to user selection, replace old object
                                 onChange={(e) => setEventDetails({ ...eventDetails, color: e.target.value })}
                             />
                         </div>
@@ -137,7 +156,9 @@ function CalendarPage() {
                             <strong>{event.name}</strong>
                             <p>{event.description}</p>
                             <p>
-                                {event.startDate.toDateString()} - {event.endDate.toDateString()}
+                                Start: {event.startDate.toDateString()}: {event.startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                <br/>
+                                End: {event.endDate.toDateString()}: {event.endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </p>
                         </div>
                     ))}
