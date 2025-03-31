@@ -62,6 +62,10 @@ function CalendarPage() {
         setEventDetails({ name: '', description: '', color: '#ff0000' });
     };
 
+    const handleDeleteEvent = (index) => {
+        setEvents(events.filter((_, i) => i !== index));
+    };
+
     return (
         <div className='calendar' style={{ backgroundImage: `url(${BackgroundImage})` }}>
             <div className='headerContainer'>
@@ -153,6 +157,12 @@ function CalendarPage() {
                             className='eventItem'
                             style={{ backgroundColor: event.color }}
                         >
+                            <button
+                                onClick={() => handleDeleteEvent(index)}
+                                className='deleteButton'
+                            >
+                                Remove
+                            </button>   
                             <strong>{event.name}</strong>
                             <p>{event.description}</p>
                             <p>
