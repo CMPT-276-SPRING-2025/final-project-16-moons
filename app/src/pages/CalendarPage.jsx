@@ -66,6 +66,10 @@ function CalendarPage() {
         setEvents(events.filter((_, i) => i !== index));
     };
 
+    const handleClearAllEvents = () => {
+        setEvents([]);
+    };
+
     return (
         <div className='calendar' style={{ backgroundImage: `url(${BackgroundImage})` }}>
             <div className='headerContainer'>
@@ -150,7 +154,15 @@ function CalendarPage() {
                 )}
 
                 <div className='eventsList'>
-                    <h2>My Events</h2>
+                    {/* <h2>My Events</h2> */}
+                    <div className='eventsHeader'>
+                        <h2>My Events</h2>
+                        {events.length > 0 && (
+                            <button onClick={handleClearAllEvents} className='clearAllButton'>
+                                Clear All
+                            </button>
+                        )}
+                    </div>
                     {events.map((event, index) => (
                         <div
                             key={index}

@@ -185,6 +185,8 @@
     text-decoration: underline;
 }
 
+/*EVENT LIST*/
+
 .eventsList {
     height: 380px;
     max-height: 380px;
@@ -194,6 +196,25 @@
     border-radius: 10px;
     width: 300px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.eventsList .eventsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.eventsList .eventsHeader .clearAllButton {
+    background-color: #425e68;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.eventsList .eventsHeader .clearAllButton:hover {
+    background-color: #7698a4;
 }
 
 .eventsList h2 {
