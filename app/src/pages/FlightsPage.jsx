@@ -12,7 +12,7 @@ function Flights() {
         <h1>Flights</h1>
       </div>
       <div className ="search-bar-container">
-        <SearchBar />
+        <SearchBar placeholder="Search for a city to travel to..." />
       </div>
     </div>
   )

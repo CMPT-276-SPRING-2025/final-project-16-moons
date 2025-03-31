@@ -16,10 +16,15 @@ input {
     font-size: 1.25rem;
     width: 100%;
     margin-left: 5px;
+    color: black;
 }
 
 input:focus {
     outline: none;
+}
+
+input::placeholder {
+    color: black;
 }
 
 #search-icon {
