@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Logo from '../assets/airplane-icon.svg'; // ** Placeholder logo
+import Logo from '../assets/airplane-around-earth.png'; // ** Placeholder logo
 import {Link} from 'react-router-dom';
 import '../styles/Navbar.css';
 import ReorderIcon from '@mui/icons-material/Reorder';

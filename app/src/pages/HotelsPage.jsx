@@ -12,7 +12,7 @@ function Hotels() {
         <h1>Hotels</h1>
       </div>
       <div className ="search-bar-container">
-        <SearchBar placeholder="Search for a hotel..." />
+        <SearchBar placeholder="Search for a city to stay in..." />
       </div>
     </div>
   )
