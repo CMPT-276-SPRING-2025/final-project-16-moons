@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import BackgroundImage from '../assets/calendar-background.jpg';
 import Calendar from 'react-calendar';
 import ColorLensIcon from '@mui/icons-material/ColorLens';
-import GoogleIcon from '@mui/icons-material/Google';
 import '../styles/Calendar.css';
+import GoogleLogo from '../assets/Google__G__logo.svg'
 
 import { signInWithGoogle } from '../firebase/firebase';
 
@@ -78,7 +78,7 @@ function CalendarPage() {
             <div className='headerContainer'>
                 <h1>Calendar</h1>
                 <button className='googleSignInButton' onClick={signInWithGoogle}>
-                    <GoogleIcon /> Sign in With Google
+                    <img className='googleLogo' src={GoogleLogo} /> Sign in With Google
                 </button>
             </div>
             <div className='calendarBody'>
