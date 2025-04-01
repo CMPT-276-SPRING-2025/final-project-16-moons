@@ -70,6 +70,100 @@ function CalendarPage() {
         setEvents([]);
     };
 
+    const handleDownloadEventList = () => {
+        const eventListText = events.map((event) => {
+            return `Event: ${event.name}
+Description: ${event.description}
+Start Date: ${event.startDate.toDateString()} ${event.startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+End Date: ${event.endDate.toDateString()} ${event.endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+Colour: ${event.color}
+---`;
+        }).join('\n');
+
+        const blob = new Blob([eventListText], { type: 'text/plain' });
+
+        const downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = 'events.txt';
+        downloadLink.click();
+    };
+
+    const handleImportEvents = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+    
+        if (file.type !== 'text/plain') {
+            alert('Please upload a valid .txt file!');
+            return;
+        }
+    
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const fileContent = event.target.result;
+    
+            try {
+                const importedEvents = parseEventList(fileContent);
+                
+                setEvents((prevEvents) => {
+                    // Combine old and new events
+                    const updatedEvents = [...prevEvents, ...importedEvents];
+    
+                    // Sort events by start date
+                    return updatedEvents.sort((a, b) => a.startDate - b.startDate);
+                });
+    
+            } catch (error) {
+                alert('Error parsing file content. Please make sure the file is correctly formatted.');
+            }
+        };
+    
+        reader.readAsText(file);
+    };
+    
+    const parseEventList = (fileContent) => {
+        const eventSections = fileContent.split('---').map(section => section.trim()).filter(section => section.length > 0);
+    
+        return eventSections.map((section, index) => {
+            const lines = section.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    
+            if (lines.length < 5) {
+                console.log(`Invalid event format at event ${index + 1}`);
+                throw new Error(`Invalid event format at event ${index + 1}`);
+            }
+    
+            const name = lines[0].replace('Event: ', '').trim();
+            const description = lines[1].replace('Description: ', '').trim();
+            const startDateStr = lines[2].replace('Start Date: ', '').trim();
+            const endDateStr = lines[3].replace('End Date: ', '').trim();
+            const colour = lines[4].replace('Colour: ', '').trim();
+    
+            console.log(`Parsing Event ${index + 1}:`);
+            console.log(`Name: ${name}`);
+            console.log(`Description: ${description}`);
+            console.log(`Start Date: ${startDateStr}`);
+            console.log(`End Date: ${endDateStr}`);
+    
+            const startDate = new Date(startDateStr);
+            const endDate = new Date(endDateStr);
+    
+            console.log(`Parsed Start Date: ${startDate}`);
+            console.log(`Parsed End Date: ${endDate}`);
+    
+            if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+                console.log(`Invalid date format in event ${index + 1}`);
+                throw new Error(`Invalid date format in event ${index + 1}`);
+            }
+    
+            return {
+                name: name,
+                description: description,
+                color: colour,
+                startDate: startDate,
+                endDate: endDate
+            };
+        });
+    };
+
     return (
         <div className='calendar' style={{ backgroundImage: `url(${BackgroundImage})` }}>
             <div className='headerContainer'>
@@ -185,6 +279,26 @@ function CalendarPage() {
                         </div>
                     ))}
                 </div>
+            </div>
+            <br></br>
+            <div className='shareImportButtonsContainer-NotLoggedIn'>
+                <button className="importButton" onClick={() => document.getElementById('fileInput').click()}>
+                    Import Events
+                </button>
+                <input 
+                    type="file" 
+                    id="fileInput" 
+                    accept=".txt" 
+                    style={{ display: 'none' }} 
+                    onChange={handleImportEvents}
+                />
+
+
+                {events.length > 0 && (<button
+                    onClick={handleDownloadEventList} 
+                    className="shareButton">
+                        Share Events
+                </button>)}
             </div>
         </div>
     );
