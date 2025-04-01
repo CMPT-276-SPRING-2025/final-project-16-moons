@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import BackgroundImage from '../assets/calendar-background.jpg';
 import Calendar from 'react-calendar';
 import ColorLensIcon from '@mui/icons-material/ColorLens';
 import '../styles/Calendar.css';
 import GoogleLogo from '../assets/Google__G__logo.svg'
 
-import { signInWithGoogle } from '../firebase/firebase';
+import { signInWithGoogle, auth } from '../firebase/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 function CalendarPage() {
 
@@ -15,6 +16,29 @@ function CalendarPage() {
     const [events, setEvents] = useState([]);
     const [startTime, setStartTime] = useState('00:00');
     const [endTime, setEndTime] = useState('23:59');
+
+    const [userName, setUserName] = useState(null);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                setUserName(user.displayName); // User is signed in
+            } else {
+                setUserName(null); // No user is signed in
+            }
+        });
+
+        return () => unsubscribe(); // Cleanup subscription on unmount
+    }, []);
+
+    const handleGoogleSignIn = async () => {
+        try {
+            await signInWithGoogle();
+            // No need to manually set userName because `onAuthStateChanged` handles it
+        } catch (error) {
+            console.error("Google Sign-In Error:", error);
+        }
+    };
 
     const handleDateSelection = (date) => {
         if (!startDate) {
@@ -77,9 +101,13 @@ function CalendarPage() {
         <div className='calendar' style={{ backgroundImage: `url(${BackgroundImage})` }}>
             <div className='headerContainer'>
                 <h1>Calendar</h1>
-                <button className='googleSignInButton' onClick={signInWithGoogle}>
-                    <img className='googleLogo' src={GoogleLogo} /> Sign in With Google
-                </button>
+                {userName ? (
+                    <p className='welcomeMessage'>Welcome, {userName}</p>
+                ) : (
+                    <button className='googleSignInButton' onClick={handleGoogleSignIn}>
+                        <img src={GoogleLogo} className='googleLogo'/> Sign in With Google
+                    </button>
+                )}
             </div>
             <div className='calendarBody'>
                 <div className='calendarContainer'>

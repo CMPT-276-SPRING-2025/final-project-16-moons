@@ -25,6 +25,12 @@
     margin-right: 10px;
 }
 
+.headerContainer p {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    margin-top: 0%;
+}
+
 .calendar .headerContainer .googleSignInButton {
     top: 5px;
     right: 10px;
