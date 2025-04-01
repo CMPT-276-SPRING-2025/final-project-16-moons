@@ -92,15 +92,13 @@ export const getCurrentLocation = () => {
   });
 };
 
-// Mock function to get flight data
-// In a real app, this would call a flight API
+// NEEDS TO BE UPDATED
 export const getFlightData = async (originCoords, destinationCoords, destinationName) => {
   // Simulate API call delay
   await new Promise(resolve => setTimeout(resolve, 500));
 
-  // Mock flight data
   const distance = calculateDistance(originCoords, destinationCoords);
-  const flightTime = Math.round(distance / 800); // Rough estimate: 800 km/hour
+  const flightTime = Math.round(distance / 800);
 
   return {
     origin: {
