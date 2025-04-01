@@ -130,18 +130,35 @@ Colour: ${event.color}
     
             try {
                 const importedEvents = parseEventList(fileContent);
-                
-                setEvents((prevEvents) => {
-                    // Combine old and new events
-                    const updatedEvents = [...prevEvents, ...importedEvents];
+
+                const uniqueImportedEvents = importedEvents.filter((importedEvent) => {
+                    return !events.some((existingEvent) => 
+                        existingEvent.name === importedEvent.name &&
+                        existingEvent.description === importedEvent.description &&
+                        existingEvent.startDate.getTime() === importedEvent.startDate.getTime() &&
+                        existingEvent.endDate.getTime() === importedEvent.endDate.getTime()
+                    );
+                });
     
-                    // Sort events by start date
+                setEvents((prevEvents) => {
+                    const updatedEvents = [
+                        ...prevEvents,
+                        ...uniqueImportedEvents.map(event => ({
+                            ...event,
+                            startDate: new Date(event.startDate),
+                            endDate: new Date(event.endDate),
+                        }))
+                    ];
+    
                     return updatedEvents.sort((a, b) => a.startDate - b.startDate);
                 });
     
             } catch (error) {
                 alert('Error parsing file content. Please make sure the file is correctly formatted.');
+                console.error("Import Error:", error);
             }
+    
+            e.target.value = '';
         };
     
         reader.readAsText(file);
@@ -173,23 +190,21 @@ Colour: ${event.color}
             const startDate = new Date(startDateStr);
             const endDate = new Date(endDateStr);
     
-            console.log(`Parsed Start Date: ${startDate}`);
-            console.log(`Parsed End Date: ${endDate}`);
-    
             if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
                 console.log(`Invalid date format in event ${index + 1}`);
                 throw new Error(`Invalid date format in event ${index + 1}`);
             }
     
             return {
-                name: name,
-                description: description,
+                name,
+                description,
                 color: colour,
-                startDate: startDate,
-                endDate: endDate
+                startDate,
+                endDate
             };
         });
     };
+    
 
     return (
         <div className='calendar' style={{ backgroundImage: `url(${BackgroundImage})` }}>
@@ -315,25 +330,47 @@ Colour: ${event.color}
                 </div>
             </div>
             <br></br>
-            <div className='shareImportButtonsContainer-NotLoggedIn'>
-                <button className="importButton" onClick={() => document.getElementById('fileInput').click()}>
-                    Import Events
-                </button>
-                <input 
-                    type="file" 
-                    id="fileInput" 
-                    accept=".txt" 
-                    style={{ display: 'none' }} 
-                    onChange={handleImportEvents}
-                />
+            
+            <div className='shareImportButtonsContainer'>
+                {userName ? (
+                    <>
+                    <button className="importButton" onClick={() => document.getElementById('fileInput').click()}>
+                            Import Events
+                    </button>
+                    <input 
+                            type="file" 
+                            id="fileInput" 
+                            accept=".txt" 
+                            style={{ display: 'none' }} 
+                            onChange={handleImportEvents}
+                    />
+                    
+                    <button className="shareButton" onClick={() => alert('WIP')}>
+                        Share 
+                    </button>
+                    </>
+                ) : (
+                    <>
+                        <button className="importButton" onClick={() => document.getElementById('fileInput').click()}>
+                            Import Events
+                        </button>
+                        <input 
+                            type="file" 
+                            id="fileInput" 
+                            accept=".txt" 
+                            style={{ display: 'none' }} 
+                            onChange={handleImportEvents}
+                        />
 
-
-                {events.length > 0 && (<button
-                    onClick={handleDownloadEventList} 
-                    className="shareButton">
-                        Share Events
-                </button>)}
+                        {events.length > 0 && (<button
+                            onClick={handleDownloadEventList} 
+                            className="exportButton">
+                                Export Events
+                        </button>)}
+                    </>
+                )}
             </div>
+
         </div>
     );
 }
