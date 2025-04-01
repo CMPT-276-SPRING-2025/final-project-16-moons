@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import BackgroundImage from '../assets/calendar-background.jpg';
 import Calendar from 'react-calendar';
 import ColorLensIcon from '@mui/icons-material/ColorLens';
 import '../styles/Calendar.css';
+import GoogleLogo from '../assets/Google__G__logo.svg'
+
+import { signInWithGoogle, auth, signOutUser } from '../firebase/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 function CalendarPage() {
 
@@ -12,6 +16,34 @@ function CalendarPage() {
     const [events, setEvents] = useState([]);
     const [startTime, setStartTime] = useState('00:00');
     const [endTime, setEndTime] = useState('23:59');
+
+    const [userName, setUserName] = useState(null);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                setUserName(user.displayName); // User is signed in
+            } else {
+                setUserName(null); // No user is signed in
+            }
+        });
+
+        return () => unsubscribe(); // Cleanup subscription on unmount
+    }, []);
+
+    const handleGoogleSignIn = async () => {
+        try {
+            await signInWithGoogle();
+            setUserName(auth.currentUser.displayName);
+        } catch (error) {
+            console.error("Google Sign-In Error:", error);
+        }
+    };
+
+    const handleLogout = () => {
+        signOutUser();
+        setUserName(null);
+    }
 
     const handleDateSelection = (date) => {
         if (!startDate) {
@@ -103,18 +135,35 @@ Colour: ${event.color}
     
             try {
                 const importedEvents = parseEventList(fileContent);
-                
-                setEvents((prevEvents) => {
-                    // Combine old and new events
-                    const updatedEvents = [...prevEvents, ...importedEvents];
+
+                const uniqueImportedEvents = importedEvents.filter((importedEvent) => {
+                    return !events.some((existingEvent) => 
+                        existingEvent.name === importedEvent.name &&
+                        existingEvent.description === importedEvent.description &&
+                        existingEvent.startDate.getTime() === importedEvent.startDate.getTime() &&
+                        existingEvent.endDate.getTime() === importedEvent.endDate.getTime()
+                    );
+                });
     
-                    // Sort events by start date
+                setEvents((prevEvents) => {
+                    const updatedEvents = [
+                        ...prevEvents,
+                        ...uniqueImportedEvents.map(event => ({
+                            ...event,
+                            startDate: new Date(event.startDate),
+                            endDate: new Date(event.endDate),
+                        }))
+                    ];
+    
                     return updatedEvents.sort((a, b) => a.startDate - b.startDate);
                 });
     
             } catch (error) {
                 alert('Error parsing file content. Please make sure the file is correctly formatted.');
+                console.error("Import Error:", error);
             }
+    
+            e.target.value = '';
         };
     
         reader.readAsText(file);
@@ -146,28 +195,38 @@ Colour: ${event.color}
             const startDate = new Date(startDateStr);
             const endDate = new Date(endDateStr);
     
-            console.log(`Parsed Start Date: ${startDate}`);
-            console.log(`Parsed End Date: ${endDate}`);
-    
             if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
                 console.log(`Invalid date format in event ${index + 1}`);
                 throw new Error(`Invalid date format in event ${index + 1}`);
             }
     
             return {
-                name: name,
-                description: description,
+                name,
+                description,
                 color: colour,
-                startDate: startDate,
-                endDate: endDate
+                startDate,
+                endDate
             };
         });
     };
+    
 
     return (
         <div className='calendar' style={{ backgroundImage: `url(${BackgroundImage})` }}>
             <div className='headerContainer'>
                 <h1>Calendar</h1>
+                {userName ? (
+                    <>
+                        <p className='welcomeMessage'>Welcome, {userName}</p>
+                        <button onClick={handleLogout} className='logoutButton'>
+                            Logout
+                        </button>
+                    </>
+                ) : (
+                    <button className='googleSignInButton' onClick={handleGoogleSignIn}>
+                        <img src={GoogleLogo} className='googleLogo'/> Sign in With Google
+                    </button>
+                )}
             </div>
             <div className='calendarBody'>
                 <div className='calendarContainer'>
@@ -281,25 +340,47 @@ Colour: ${event.color}
                 </div>
             </div>
             <br></br>
-            <div className='shareImportButtonsContainer-NotLoggedIn'>
-                <button className="importButton" onClick={() => document.getElementById('fileInput').click()}>
-                    Import Events
-                </button>
-                <input 
-                    type="file" 
-                    id="fileInput" 
-                    accept=".txt" 
-                    style={{ display: 'none' }} 
-                    onChange={handleImportEvents}
-                />
+            
+            <div className='shareImportButtonsContainer'>
+                {userName ? (
+                    <>
+                    <button className="importButton" onClick={() => document.getElementById('fileInput').click()}>
+                            Import Events
+                    </button>
+                    <input 
+                            type="file" 
+                            id="fileInput" 
+                            accept=".txt" 
+                            style={{ display: 'none' }} 
+                            onChange={handleImportEvents}
+                    />
 
+                    <button className="shareButton" onClick={() => alert('WIP')}>
+                        Share 
+                    </button>
+                    </>
+                ) : (
+                    <>
+                        <button className="importButton" onClick={() => document.getElementById('fileInput').click()}>
+                            Import Events
+                        </button>
+                        <input 
+                            type="file" 
+                            id="fileInput" 
+                            accept=".txt" 
+                            style={{ display: 'none' }} 
+                            onChange={handleImportEvents}
+                        />
 
-                {events.length > 0 && (<button
-                    onClick={handleDownloadEventList} 
-                    className="shareButton">
-                        Share Events
-                </button>)}
+                        {events.length > 0 && (<button
+                            onClick={handleDownloadEventList} 
+                            className="exportButton">
+                                Export Events
+                        </button>)}
+                    </>
+                )}
             </div>
+
         </div>
     );
 }
