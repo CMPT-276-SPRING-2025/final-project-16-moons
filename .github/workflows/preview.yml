@@ -10,7 +10,28 @@ on:
       - main
 
 jobs:
+
+  Test-Preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm install
+        working-directory: app
+
+      - name: Run Tests
+        run: npm run test:prod
+        working-directory: app
+
   Deploy-Preview:
+    needs: [Test-Preview]
     runs-on: ubuntu-latest
     steps:
 
