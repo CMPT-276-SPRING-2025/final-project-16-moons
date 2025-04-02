@@ -92,13 +92,21 @@ export const getCurrentLocation = () => {
   });
 };
 
-// NEEDS TO BE UPDATED
+// mock data
 export const getFlightData = async (originCoords, destinationCoords, destinationName) => {
   // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise(resolve => setTimeout(resolve, 1000));
 
   const distance = calculateDistance(originCoords, destinationCoords);
   const flightTime = Math.round(distance / 800);
+  const departureTime = new Date(Date.now() + Math.floor(Math.random() * 86400000*3));
+  const arrivalTime = new Date(departureTime.getTime() + flightTime * 3600000);
+  const departureTime2 = new Date(Date.now() + Math.floor(Math.random() * 86400000*3));
+  const arrivalTime2 = new Date(departureTime2.getTime() + flightTime * 3600000);
+  const departureTime3 = new Date(Date.now() + Math.floor(Math.random() * 86400000*3));
+  const arrivalTime3 = new Date(departureTime3.getTime() + flightTime * 3600000);
+  const departureTime4 = new Date(Date.now() + Math.floor(Math.random() * 86400000*3));
+  const arrivalTime4 = new Date(departureTime4.getTime() + flightTime * 3600000);
 
   return {
     origin: {
@@ -112,18 +120,34 @@ export const getFlightData = async (originCoords, destinationCoords, destination
     flights: [
       {
         airline: 'Air Canada',
-        flightNumber: 'CNA3989',
-        departureTime: new Date(Date.now() + 9600000*3),
-        arrivalTime: new Date(Date.now() + 9600000*3 + flightTime * 3600000),
-        price: Math.round(100 + distance * 0.1), // Mock price calculation
+        flightNumber: 'AC' + Math.floor(Math.random() * 10000),
+        departureTime: departureTime,
+        arrivalTime: arrivalTime,
+        price: Math.round(100 + distance * 0.1),
         duration: flightTime
       },
       {
         airline: 'Delta Airlines',
-        flightNumber: 'DLA8972',
-        departureTime: new Date(Date.now() + 43200000*3), // Day after tomorrow
-        arrivalTime: new Date(Date.now() + 43200000*3 + (flightTime - 0.5) * 3600000),
+        flightNumber: 'DL' + Math.floor(Math.random() * 10000),
+        departureTime: departureTime2,
+        arrivalTime: arrivalTime2,
         price: Math.round(90 + distance * 0.12),
+        duration: flightTime
+      },
+      {
+        airline: 'United Airlines',
+        flightNumber: 'UA' + Math.floor(Math.random() * 10000),
+        departureTime: departureTime3,
+        arrivalTime: arrivalTime3,
+        price: Math.round(85 + distance * 0.11),
+        duration: flightTime
+      },
+      {
+        airline: 'WestJet',
+        flightNumber: 'WS' + Math.floor(Math.random() * 10000),
+        departureTime: departureTime4,
+        arrivalTime: arrivalTime4,
+        price: Math.round(80 + distance * 0.13),
         duration: flightTime
       }
     ],
@@ -173,14 +197,15 @@ export const drawFlightPath = (map, originCoords, destinationCoords) => {
 // load google maps script
 export const loadGoogleMapsScript = (callback) => {
   // check if already loaded
-  if (window.google && window.google.maps) {
+  if (document.querySelector('script[src*="maps.googleapis.com"]')) {
+    console.warn("Google Maps API script is already loaded.");
     callback();
     return;
   }
 
   // create script element
   const script = document.createElement('script');
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&libraries=places`;
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&libraries=places&loading=async`;
   script.async = true;
   script.defer = true;
   
