@@ -41,15 +41,16 @@
   flex-direction: column;
   align-items:center;
   min-width: 200px;
-  transition: all 0.3s ease-in-out;
   z-index: 10;
-  transform: translateY(20px);
+  position: relative;
+  transform: translateY(15px);
 }
 
 .search-bar-top {
   padding-top: 10px;
   margin-top: 10px;
   width: 50%;
+  transform: translateY(32px);
 }
 
 .flight-content {
@@ -64,7 +65,11 @@
   height: 65vh;
   overflow-y: auto;
   position: relative;
-  transform: translateY(50px);
+  transform: translateY(45px);
+}
+
+.flight-content-transformed {
+  transform: translateY(33px);
 }
 
 .map-container {
@@ -142,7 +147,7 @@
   margin: 10px 0;
   color: #721c24;
   text-align: center;
-  transform: translateY(30px);
+  transform: translateY(33px);
 }
 
   @media only screen and (max-width: 768px) {

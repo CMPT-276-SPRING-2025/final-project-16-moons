@@ -25,6 +25,7 @@ function Flights() {
   const [hasSearched, setHasSearched] = useState(false);
   // references to map, marker, and path
   const mapRef = useRef(null);
+  const homeRef = useRef(null);
   const markerRef = useRef(null);
   const pathRef = useRef(null);
 
@@ -90,7 +91,9 @@ function Flights() {
 
       // Center map on the destination and zoom in
       mapInstance.setCenter(geoData.coordinates);
-      mapInstance.setZoom(10);
+      mapInstance.setZoom(3);
+      // create home marker
+      homeRef.current = addMarker(mapInstance, currentLocation, { title: "Home" });
 
       // remove existing marker if exists
       if (markerRef.current) {
@@ -106,21 +109,19 @@ function Flights() {
           geoData.coordinates, 
           geoData.formattedAddress
         );
+        
         setFlightData(data);
 
         // remove existing path if exists
         if (pathRef.current) {
           pathRef.current.setMap(null);
         }
-
-        // center the map on the flight path and zoom in
-        mapInstance.setZoom(4);
-        mapInstance.setCenter({
-          lat: (currentLocation.lat + geoData.coordinates.lat) / 2,
-          lng: (currentLocation.lng + geoData.coordinates.lng) / 2
-        });
         // draw flight path
         pathRef.current = drawFlightPath(mapInstance, currentLocation, geoData.coordinates);
+        
+        // Set zoom and center to show the full flight path
+        mapInstance.setZoom(7);
+        mapInstance.setCenter(geoData.coordinates);
       }
     } catch (err) {
       // handle errors
@@ -166,7 +167,7 @@ function Flights() {
       )}
       
       {/* search bar container */}
-      <div className={`search-bar-container ${hasSearched ? 'search-bar-top' : ''}`}>
+      <div className={`search-bar-container ${hasSearched && (isLoading || error) ? 'search-bar-top' : ''}`}>
         <SearchBar 
           placeholder="Enter a destination to visit..." 
           onSearch={handleSearch} 
@@ -181,7 +182,8 @@ function Flights() {
       
       {/* only show flight content if search has been made */}
       {hasSearched && (
-        <div className="flight-content">
+        // add a transform if loading or error pop ups are shown
+        <div className={`flight-content ${isLoading || error ? 'flight-content-transformed' : ''}`}>
           {/* map container */}
           <div id="map-container" className="map-container"></div>
           
