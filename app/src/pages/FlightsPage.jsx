@@ -31,17 +31,13 @@ function Flights() {
 
   // load google maps script
   useEffect(() => {
+    // Load Google Maps script only once
     loadGoogleMapsScript(() => {
-      console.log("Google Maps API loaded");
-
-      // ensure map is initialized when DOM is ready
-      if (!mapRef.current) {
-        const mapElement = document.getElementById('map-container');
-        if (mapElement) {
-          const newMap = initializeMap('map-container');
-          setMap(newMap);
-          mapRef.current = newMap;
-        }
+      // Map initialization will happen after script loads
+      if (!mapRef.current && document.getElementById('map-container')) {
+        const newMap = initializeMap('map-container');
+        setMap(newMap);
+        mapRef.current = newMap;
       }
     });
 
@@ -52,6 +48,9 @@ function Flights() {
 
     // Cleanup function
     return () => {
+      if (homeRef.current) {
+        homeRef.current.setMap(null);
+      }
       if (markerRef.current) {
         markerRef.current.setMap(null);
       }

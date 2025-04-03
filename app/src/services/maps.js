@@ -1,4 +1,3 @@
-// get the api key from the environment variables
 const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 // initialize google map inside an html element
@@ -34,6 +33,7 @@ export const geocodeCity = async (cityName) => {
             formattedAddress: results[0].formatted_address,
             placeId: results[0].place_id
           });
+          console.log('Geocoding successful:', results[0].formatted_address);
         } else {
           // reject the promise if geocoding fails
           reject(new Error(`Geocoding failed: ${status}`));
@@ -41,7 +41,7 @@ export const geocodeCity = async (cityName) => {
       });
     });
   } catch (error) {
-    console.error('Error geocoding city:', error);
+    console.log('Error geocoding city:', error);
     throw error;
   }
 };
@@ -68,7 +68,7 @@ export const addMarker = (map, position, options = {}) => {
 
 // get users current location
 export const getCurrentLocation = () => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     // check if geolocation is supported on browser
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -79,13 +79,13 @@ export const getCurrentLocation = () => {
           });
         },
         (error) => {
-          console.error('Error getting current location:', error);
+          console.log('Error getting current location:', error);
           // Default to Vancouver if geolocation fails
           resolve({ lat: 49.2827, lng: -123.1207 });
         }
       );
     } else {
-      console.error('Geolocation not supported');
+      console.log('Default location set to Vancouver, BC');
       // Default to Vancouver if geolocation not supported
       resolve({ lat: 49.2827, lng: -123.1207 });
     }
@@ -155,19 +155,17 @@ export const getFlightData = async (originCoords, destinationCoords, destination
   };
 };
 
-// helper func
+// helper func (haversine formula)
 const calculateDistance = (point1, point2) => {
   // earth's radius in km
   const R = 6371;
   // convert degrees to radians
   const dLat = deg2rad(point2.lat - point1.lat);
   const dLng = deg2rad(point2.lng - point1.lng);
-  
   const a = 
     Math.sin(dLat/2) * Math.sin(dLat/2) +
     Math.cos(deg2rad(point1.lat)) * Math.cos(deg2rad(point2.lat)) * 
     Math.sin(dLng/2) * Math.sin(dLng/2);
-  
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return Math.round(R * c);
 };
@@ -196,25 +194,54 @@ export const drawFlightPath = (map, originCoords, destinationCoords) => {
 
 // load google maps script
 export const loadGoogleMapsScript = (callback) => {
-  // check if already loaded
-  if (document.querySelector('script[src*="maps.googleapis.com"]')) {
-    console.warn("Google Maps API script is already loaded.");
-    callback();
+  // Check if the script is being loaded
+  if (window.googleMapsScriptLoading) {
+    console.log("Google Maps API script is loading...");
+    // If already loading, add this callback to be executed when loaded
+    if (typeof callback === 'function') {
+      window.googleMapsCallbacks = window.googleMapsCallbacks || [];
+      window.googleMapsCallbacks.push(callback);
+    }
+    return;
+  }
+  
+  // Check if already loaded
+  if (window.google && window.google.maps) {
+    if (typeof callback === 'function') {
+      callback();
+    }
     return;
   }
 
-  // create script element
+  // Set flag that we're loading the script
+  window.googleMapsScriptLoading = true;
+  window.googleMapsCallbacks = window.googleMapsCallbacks || [];
+  if (typeof callback === 'function') {
+    window.googleMapsCallbacks.push(callback);
+  }
+
+  // Create script element
   const script = document.createElement('script');
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&libraries=places&loading=async`;
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&libraries=places,marker&loading=async`;
   script.async = true;
   script.defer = true;
   
-  // callback when script loads
-  script.onload = callback;
-  script.onerror = () => {
-    console.error('Error loading Google Maps API');
+  // Callback when script loads
+  script.onload = () => {
+    window.googleMapsScriptLoading = false;
+    console.log("Google Maps API loaded");
+    
+    // Execute all callbacks
+    if (window.googleMapsCallbacks && window.googleMapsCallbacks.length) {
+      window.googleMapsCallbacks.forEach(cb => {
+        if (typeof cb === 'function') {
+          cb();
+        }
+      });
+      window.googleMapsCallbacks = [];
+    }
   };
-  
+
   // add script to document
   document.head.appendChild(script);
 };
