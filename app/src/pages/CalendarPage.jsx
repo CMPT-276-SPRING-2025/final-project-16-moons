@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import BackgroundImage from '../assets/calendar-background.jpg';
 import Calendar from 'react-calendar';
 import ColorLensIcon from '@mui/icons-material/ColorLens';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import '../styles/Calendar.css';
-import GoogleLogo from '../assets/Google__G__logo.svg'
-
-import { signInWithGoogle, auth, signOutUser } from '../firebase/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import GoogleLogo from '../assets/Google__G__logo.svg';
+import useGoogleAuth from '../components/googleAuth';
 
 function CalendarPage() {
+
+    // hook for google auth
+    const { authorized, userName, signIn, signOut, content } = useGoogleAuth();
 
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
@@ -17,39 +19,12 @@ function CalendarPage() {
     const [startTime, setStartTime] = useState('00:00');
     const [endTime, setEndTime] = useState('23:59');
 
-    const [userName, setUserName] = useState(null);
-
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                setUserName(user.displayName); // User is signed in
-            } else {
-                setUserName(null); // No user is signed in
-            }
-        });
-
-        return () => unsubscribe(); // Cleanup subscription on unmount
-    }, []);
-
-    const handleGoogleSignIn = async () => {
-        try {
-            await signInWithGoogle();
-            setUserName(auth.currentUser.displayName);
-        } catch (error) {
-            console.error("Google Sign-In Error:", error);
-        }
-    };
-
-    const handleLogout = () => {
-        signOutUser();
-        setUserName(null);
-    }
+    ////////////* CALENDAR MANAGEMENT *//////////////
 
     const handleDateSelection = (date) => {
         if (!startDate) {
             setStartDate(date);
         } else if (!endDate) {
-            // swap dates if second selection date is earlier
             if (date < startDate) {
                 setEndDate(startDate);
                 setStartDate(date);
@@ -63,22 +38,18 @@ function CalendarPage() {
         e.preventDefault();
         if (startDate && endDate) {
             const start = new Date(startDate);
-            start.setHours(...startTime.split(':').map(Number)); // set hrs and mins
-    
+            start.setHours(...startTime.split(':').map(Number));
             const end = new Date(endDate);
-            end.setHours(...endTime.split(':').map(Number)); // set hrs and mins
-    
+            end.setHours(...endTime.split(':').map(Number));
             const newEvent = {
                 ...eventDetails,
                 color: eventDetails.color,
-                startDate: start,  // stores as 'Date' object
+                startDate: start,
                 endDate: end
             };
-    
             const sortedEvents = [...events, newEvent].sort(
                 (a, b) => new Date(a.startDate) - new Date(b.startDate)
             );
-    
             setEvents(sortedEvents);
             setStartDate(null);
             setEndDate(null);
@@ -113,7 +84,6 @@ Colour: ${event.color}
         }).join('\n');
 
         const blob = new Blob([eventListText], { type: 'text/plain' });
-
         const downloadLink = document.createElement('a');
         downloadLink.href = URL.createObjectURL(blob);
         downloadLink.download = 'events.txt';
@@ -123,28 +93,27 @@ Colour: ${event.color}
     const handleImportEvents = (e) => {
         const file = e.target.files[0];
         if (!file) return;
-    
+
         if (file.type !== 'text/plain') {
             alert('Please upload a valid .txt file!');
             return;
         }
-    
+
         const reader = new FileReader();
         reader.onload = (event) => {
             const fileContent = event.target.result;
-    
+
             try {
                 const importedEvents = parseEventList(fileContent);
-
                 const uniqueImportedEvents = importedEvents.filter((importedEvent) => {
-                    return !events.some((existingEvent) => 
+                    return !events.some((existingEvent) =>
                         existingEvent.name === importedEvent.name &&
                         existingEvent.description === importedEvent.description &&
                         existingEvent.startDate.getTime() === importedEvent.startDate.getTime() &&
                         existingEvent.endDate.getTime() === importedEvent.endDate.getTime()
                     );
                 });
-    
+
                 setEvents((prevEvents) => {
                     const updatedEvents = [
                         ...prevEvents,
@@ -154,52 +123,45 @@ Colour: ${event.color}
                             endDate: new Date(event.endDate),
                         }))
                     ];
-    
+
                     return updatedEvents.sort((a, b) => a.startDate - b.startDate);
                 });
-    
             } catch (error) {
                 alert('Error parsing file content. Please make sure the file is correctly formatted.');
                 console.error("Import Error:", error);
             }
-    
+
             e.target.value = '';
         };
-    
+
         reader.readAsText(file);
     };
-    
+
     const parseEventList = (fileContent) => {
         const eventSections = fileContent.split('---').map(section => section.trim()).filter(section => section.length > 0);
-    
+
         return eventSections.map((section, index) => {
             const lines = section.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-    
+
             if (lines.length < 5) {
                 console.log(`Invalid event format at event ${index + 1}`);
                 throw new Error(`Invalid event format at event ${index + 1}`);
             }
-    
+
             const name = lines[0].replace('Event: ', '').trim();
             const description = lines[1].replace('Description: ', '').trim();
             const startDateStr = lines[2].replace('Start Date: ', '').trim();
             const endDateStr = lines[3].replace('End Date: ', '').trim();
             const colour = lines[4].replace('Colour: ', '').trim();
-    
-            console.log(`Parsing Event ${index + 1}:`);
-            console.log(`Name: ${name}`);
-            console.log(`Description: ${description}`);
-            console.log(`Start Date: ${startDateStr}`);
-            console.log(`End Date: ${endDateStr}`);
-    
+
             const startDate = new Date(startDateStr);
             const endDate = new Date(endDateStr);
-    
+
             if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
                 console.log(`Invalid date format in event ${index + 1}`);
                 throw new Error(`Invalid date format in event ${index + 1}`);
             }
-    
+
             return {
                 name,
                 description,
@@ -209,22 +171,68 @@ Colour: ${event.color}
             };
         });
     };
-    
+
+    const addEventsToGoogleCalendar = async () => {
+        if (!authorized) {
+          console.error("User is not authorized.");
+          return;
+        }
+        // user's time zone
+        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        // loop through each event
+        for (const event of events) {
+          const resource = {
+            summary: event.name,
+            description: event.description,
+            start: {
+              dateTime: event.startDate.toISOString(),
+              timeZone: timeZone,
+            },
+            end: {
+              dateTime: event.endDate.toISOString(),
+              timeZone: timeZone,
+            },
+          };
+          await new Promise((resolve, reject) => {
+            const request = window.gapi.client.calendar.events.insert({
+              calendarId: 'primary',
+              resource: resource,
+            });
+            request.execute((resp) => {
+              if (resp.error) {
+                console.error('Error creating event:', resp.error);
+                reject(resp.error);
+              } else {
+                console.log('Event created: ' + resp.htmlLink);
+                resolve(resp);
+              }
+            });
+          });
+        }
+        alert('Events have been uploaded to your Google Calendar!');
+        window.open('https://calendar.google.com/calendar', '_blank');
+      };
 
     return (
         <div className='calendar' style={{ backgroundImage: `url(${BackgroundImage})` }}>
             <div className='headerContainer'>
                 <h1>Calendar</h1>
-                {userName ? (
+                {authorized ? (
                     <>
                         <p className='welcomeMessage'>Welcome, {userName}</p>
-                        <button onClick={handleLogout} className='logoutButton'>
-                            Logout
-                        </button>
+                        <div className='loggedInButtons'>
+                            <button onClick={signOut} className='logoutButton'>
+                                Logout
+                            </button>
+                            <button className='addToCalendarButton' onClick={addEventsToGoogleCalendar}>
+                                <CalendarMonthIcon/>
+                                Add Events to Google Calendar
+                            </button>
+                        </div>
                     </>
                 ) : (
-                    <button className='googleSignInButton' onClick={handleGoogleSignIn}>
-                        <img src={GoogleLogo} className='googleLogo'/> Sign in With Google
+                    <button className='googleSignInButton' onClick={signIn}>
+                        <img src={GoogleLogo} className='googleLogo' /> Sign in With Google
                     </button>
                 )}
             </div>
@@ -244,7 +252,6 @@ Colour: ${event.color}
                 </div>
 
                 {startDate && endDate && (
-                    /* EVENT FORM*/
                     <form className='eventForm' onSubmit={handleEventSubmit}>
                         <input
                             type='text'
@@ -286,7 +293,7 @@ Colour: ${event.color}
                                 type='button'
                                 className='colorButton'
                                 onClick={(e) => {
-                                    e.preventDefault(); // Prevents accidental submission
+                                    e.preventDefault();
                                     document.getElementById('hiddenColorInput').click();
                                 }}
                                 style={{ color: eventDetails.color }}
@@ -296,7 +303,7 @@ Colour: ${event.color}
                             <input
                                 type='color'
                                 id='hiddenColorInput'
-                                style={{ display: 'none' }} // hide input field
+                                style={{ display: 'none' }}
                                 value={eventDetails.color}
                                 onChange={(e) => setEventDetails({ ...eventDetails, color: e.target.value })}
                             />
@@ -307,7 +314,6 @@ Colour: ${event.color}
                 )}
 
                 <div className='eventsList'>
-                    {/* <h2>My Events</h2> */}
                     <div className='eventsHeader'>
                         <h2>My Events</h2>
                         {events.length > 0 && (
@@ -317,72 +323,62 @@ Colour: ${event.color}
                         )}
                     </div>
                     {events.map((event, index) => (
-                        <div
-                            key={index}
-                            className='eventItem'
-                            style={{ backgroundColor: event.color }}
-                        >
-                            <button
-                                onClick={() => handleDeleteEvent(index)}
-                                className='deleteButton'
-                            >
+                        <div key={index} className='eventItem' style={{ backgroundColor: event.color }}>
+                            <button onClick={() => handleDeleteEvent(index)} className='deleteButton'>
                                 Remove
-                            </button>   
+                            </button>
                             <strong>{event.name}</strong>
                             <p>{event.description}</p>
                             <p>
                                 Start: {event.startDate.toDateString()}: {event.startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                <br/>
+                                <br />
                                 End: {event.endDate.toDateString()}: {event.endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </p>
                         </div>
                     ))}
                 </div>
             </div>
-            <br></br>
-            
+            <br />
             <div className='shareImportButtonsContainer'>
-                {userName ? (
+                {authorized ? (
                     <>
-                    <button className="importButton" onClick={() => document.getElementById('fileInput').click()}>
+                        <button className="importButton" onClick={() => document.getElementById('fileInput').click()}>
                             Import Events
-                    </button>
-                    <input 
-                            type="file" 
-                            id="fileInput" 
-                            accept=".txt" 
-                            style={{ display: 'none' }} 
+                        </button>
+                        <input
+                            type="file"
+                            id="fileInput"
+                            accept=".txt"
+                            style={{ display: 'none' }}
                             onChange={handleImportEvents}
-                    />
-
-                    <button className="shareButton" onClick={() => alert('WIP')}>
-                        Share 
-                    </button>
+                        />
+                        <button className="shareButton" onClick={() => alert('WIP')}>
+                            Share
+                        </button>
                     </>
                 ) : (
                     <>
                         <button className="importButton" onClick={() => document.getElementById('fileInput').click()}>
                             Import Events
                         </button>
-                        <input 
-                            type="file" 
-                            id="fileInput" 
-                            accept=".txt" 
-                            style={{ display: 'none' }} 
+                        <input
+                            type="file"
+                            id="fileInput"
+                            accept=".txt"
+                            style={{ display: 'none' }}
                             onChange={handleImportEvents}
                         />
-
-                        {events.length > 0 && (<button
-                            onClick={handleDownloadEventList} 
-                            className="exportButton">
+                        {events.length > 0 && (
+                            <button onClick={handleDownloadEventList} className="exportButton">
                                 Export Events
-                        </button>)}
+                            </button>
+                        )}
                     </>
                 )}
             </div>
-
+            <div style={{ whiteSpace: 'pre-wrap' }}>{content}</div>
         </div>
     );
 }
 
-export default CalendarPage
+export default CalendarPage;
