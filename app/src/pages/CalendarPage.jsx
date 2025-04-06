@@ -74,6 +74,7 @@ function CalendarPage() {
     };
 
     const handleDownloadEventList = () => {
+        // format event text for blob
         const eventListText = events.map((event) => {
             return `Event: ${event.name}
 Description: ${event.description}
@@ -83,6 +84,7 @@ Colour: ${event.color}
 ---`;
         }).join('\n');
 
+        // create a blob and download
         const blob = new Blob([eventListText], { type: 'text/plain' });
         const downloadLink = document.createElement('a');
         downloadLink.href = URL.createObjectURL(blob);
@@ -92,19 +94,26 @@ Colour: ${event.color}
 
     const handleImportEvents = (e) => {
         const file = e.target.files[0];
+
+        // check if file is actually selected
         if (!file) return;
 
+        // check that file is a .txt 
         if (file.type !== 'text/plain') {
             alert('Please upload a valid .txt file!');
             return;
         }
 
+        // read from the file
         const reader = new FileReader();
         reader.onload = (event) => {
             const fileContent = event.target.result;
 
             try {
+                // parse the file content
                 const importedEvents = parseEventList(fileContent);
+
+                // check for dupe events, don't import them
                 const uniqueImportedEvents = importedEvents.filter((importedEvent) => {
                     return !events.some((existingEvent) =>
                         existingEvent.name === importedEvent.name &&
@@ -114,6 +123,7 @@ Colour: ${event.color}
                     );
                 });
 
+                // import and sort events
                 setEvents((prevEvents) => {
                     const updatedEvents = [
                         ...prevEvents,
@@ -142,26 +152,29 @@ Colour: ${event.color}
 
         return eventSections.map((section, index) => {
             const lines = section.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-
+            
+            // check if the section has the correct number of lines 
             if (lines.length < 5) {
-                console.log(`Invalid event format at event ${index + 1}`);
                 throw new Error(`Invalid event format at event ${index + 1}`);
             }
 
+            // take the information
             const name = lines[0].replace('Event: ', '').trim();
             const description = lines[1].replace('Description: ', '').trim();
             const startDateStr = lines[2].replace('Start Date: ', '').trim();
             const endDateStr = lines[3].replace('End Date: ', '').trim();
             const colour = lines[4].replace('Colour: ', '').trim();
 
+            // create the dates
             const startDate = new Date(startDateStr);
             const endDate = new Date(endDateStr);
 
+            // make sure the dates are valid
             if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-                console.log(`Invalid date format in event ${index + 1}`);
                 throw new Error(`Invalid date format in event ${index + 1}`);
             }
 
+            // return the event
             return {
                 name,
                 description,
@@ -188,8 +201,6 @@ Colour: ${event.color}
                 event.endDate.getHours() === 23 &&
                 event.endDate.getMinutes() === 59 &&
                 event.startDate.toDateString() === event.endDate.toDateString();
-            
-            console.log('isAllDay:' + isAllDay);
 
             const resource = {
                 summary: event.name,
@@ -232,6 +243,7 @@ Colour: ${event.color}
     };
 
     const importEventsFromGoogleCalendar = async () => {
+        // request specifications
         const request = window.gapi.client.calendar.events.list({
             calendarId: 'primary',
             timeMin: new Date().toISOString(),
@@ -239,7 +251,8 @@ Colour: ${event.color}
             singleEvents: true,
             orderBy: 'startTime',
         });
-    
+        
+        // fetch the events
         request.execute((resp) => {
             if (resp.error) {
                 console.error('Error fetching events:', resp.error);
@@ -252,13 +265,16 @@ Colour: ${event.color}
                     const title = event.summary?.toLowerCase() || '';
                     return !title.includes('birthday') && !title.includes('holiday');
                 })
+
+                // format google calendar events to match our format
                 .map((event) => {
                     let startDate, endDate;
-        
-                    if (event.start.dateTime) {
+                    
+                    // check if event if all day
+                    if (event.start.dateTime) { // all day event
                         startDate = new Date(event.start.dateTime);
                         endDate = new Date(event.end.dateTime);
-                    } else {
+                    } else { // normal event
                         startDate = new Date(event.start.date);
                         startDate.setHours(0, 0);
                         endDate = new Date(event.end.date);
