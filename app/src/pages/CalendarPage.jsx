@@ -181,18 +181,36 @@ Colour: ${event.color}
         const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         // loop through each event
         for (const event of events) {
-          const resource = {
-            summary: event.name,
-            description: event.description,
-            start: {
-              dateTime: event.startDate.toISOString(),
-              timeZone: timeZone,
-            },
-            end: {
-              dateTime: event.endDate.toISOString(),
-              timeZone: timeZone,
-            },
-          };
+            // check if the event is all day
+            const isAllDay =
+                event.startDate.getHours() === 0 &&
+                event.startDate.getMinutes() === 0 &&
+                event.endDate.getHours() === 23 &&
+                event.endDate.getMinutes() === 59 &&
+                event.startDate.toDateString() === event.endDate.toDateString();
+            
+            console.log('isAllDay:' + isAllDay);
+
+            const resource = {
+                summary: event.name,
+                description: event.description,
+                start: isAllDay ? {
+                    date: event.startDate.toISOString().split('T')[0],
+                }
+                : {
+                  dateTime: event.startDate.toISOString(),
+                  timeZone: timeZone,
+                },
+                end: isAllDay ? {
+                    date: new Date(event.endDate.getTime() + 86400000) // add 1 day in ms
+                    .toISOString()
+                    .split('T')[0],
+                }
+                : {
+                  dateTime: event.endDate.toISOString(),
+                  timeZone: timeZone,
+                },
+          }
           await new Promise((resolve, reject) => {
             const request = window.gapi.client.calendar.events.insert({
               calendarId: 'primary',
@@ -211,7 +229,55 @@ Colour: ${event.color}
         }
         alert('Events have been uploaded to your Google Calendar!');
         window.open('https://calendar.google.com/calendar', '_blank');
-      };
+    };
+
+    const importEventsFromGoogleCalendar = async () => {
+        const request = window.gapi.client.calendar.events.list({
+            calendarId: 'primary',
+            timeMin: new Date().toISOString(),
+            maxResults: 10,
+            singleEvents: true,
+            orderBy: 'startTime',
+        });
+    
+        request.execute((resp) => {
+            if (resp.error) {
+                console.error('Error fetching events:', resp.error);
+                return;
+            }
+    
+            const importedEvents = resp.items
+                // don't import birthdays or holidays
+                .filter((event) => {
+                    const title = event.summary?.toLowerCase() || '';
+                    return !title.includes('birthday') && !title.includes('holiday');
+                })
+                .map((event) => {
+                    let startDate, endDate;
+        
+                    if (event.start.dateTime) {
+                        startDate = new Date(event.start.dateTime);
+                        endDate = new Date(event.end.dateTime);
+                    } else {
+                        startDate = new Date(event.start.date);
+                        startDate.setHours(0, 0);
+                        endDate = new Date(event.end.date);
+                        endDate.setDate(endDate.getDate() - 1);
+                        endDate.setHours(23, 59);
+                    }
+        
+                    return {
+                        name: event.summary,
+                        description: event.description || '',
+                        color: '#425e68',
+                        startDate,
+                        endDate,
+                    };
+            });
+    
+            setEvents((prevEvents) => [...prevEvents, ...importedEvents]);
+        });
+    };
 
     return (
         <div className='calendar' style={{ backgroundImage: `url(${BackgroundImage})` }}>
@@ -227,6 +293,10 @@ Colour: ${event.color}
                             <button className='addToCalendarButton' onClick={addEventsToGoogleCalendar}>
                                 <CalendarMonthIcon/>
                                 Add Events to Google Calendar
+                            </button>
+                            <button className="importFromCalendarButton" onClick={importEventsFromGoogleCalendar}>
+                                <CalendarMonthIcon/>
+                                Import Events from Google Calendar
                             </button>
                         </div>
                     </>
@@ -340,40 +410,25 @@ Colour: ${event.color}
             </div>
             <br />
             <div className='shareImportButtonsContainer'>
-                {authorized ? (
-                    <>
-                        <button className="importButton" onClick={() => document.getElementById('fileInput').click()}>
-                            Import Events
-                        </button>
-                        <input
-                            type="file"
-                            id="fileInput"
-                            accept=".txt"
-                            style={{ display: 'none' }}
-                            onChange={handleImportEvents}
-                        />
-                        <button className="shareButton" onClick={() => alert('WIP')}>
-                            Share
-                        </button>
-                    </>
-                ) : (
-                    <>
-                        <button className="importButton" onClick={() => document.getElementById('fileInput').click()}>
-                            Import Events
-                        </button>
-                        <input
-                            type="file"
-                            id="fileInput"
-                            accept=".txt"
-                            style={{ display: 'none' }}
-                            onChange={handleImportEvents}
-                        />
-                        {events.length > 0 && (
-                            <button onClick={handleDownloadEventList} className="exportButton">
-                                Export Events
-                            </button>
-                        )}
-                    </>
+                <button className="importButton" title="Import with a text document" onClick={() => document.getElementById('fileInput').click()}>
+                    Import Events
+                </button>
+                <input
+                    type="file"
+                    id="fileInput"
+                    accept=".txt"
+                    style={{ display: 'none' }}
+                    onChange={handleImportEvents}
+                />
+                {events.length > 0 && (
+                    <button className="exportButton" title="Export to a text document" onClick={handleDownloadEventList}>
+                        Export Events
+                    </button>
+                )}
+                {authorized && (
+                    <button className="shareButton" title="Share with google">
+                        Share
+                    </button>
                 )}
             </div>
             <div style={{ whiteSpace: 'pre-wrap' }}>{content}</div>

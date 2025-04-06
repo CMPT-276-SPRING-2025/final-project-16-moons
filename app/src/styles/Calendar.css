@@ -345,3 +345,17 @@
     margin-top: 10px;
     margin-bottom: 10px;
 }
+
+.loggedInButtons .importFromCalendarButton {
+    background-color: #b2d4e0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    color: #425e68;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}

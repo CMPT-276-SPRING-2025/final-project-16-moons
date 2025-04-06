@@ -12,6 +12,7 @@ function useGoogleAuth() {
   const [gapiInited, setGapiInited] = useState(false);
   const [gisInited, setGisInited] = useState(false);
   const [content, setContent] = useState('');
+  const [guestEmail, setGuestEmail] = useState('');
 
   // load external Google API scripts
   useEffect(() => {
