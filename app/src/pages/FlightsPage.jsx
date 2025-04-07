@@ -77,7 +77,6 @@ function Flights() {
         const coords = await getCurrentLocation();
         setCurrentLocation(coords);
       } catch (locationErr) {
-        // console.error('Error getting current location:', locationErr);
         // Allow the search to continue with default location
       }
     }
@@ -153,12 +152,10 @@ function Flights() {
           mapInstance.setCenter(geoData.coordinates);
         } else {
           // Handle case where currentLocation is still not available
-          // console.warn('Current location not available for flight path');
           setError('Unable to get your current location. Please try again.');
         }
       } catch (err) {
         // handle errors
-        // console.error('Error searching for city:', err);
         setError('Failed to find the specified city. Please try again.');
       } finally {
         // hide the loading popup when done

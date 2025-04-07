@@ -33,7 +33,6 @@ export const geocodeCity = async (cityName) => {
             formattedAddress: results[0].formatted_address,
             placeId: results[0].place_id
           });
-          console.log('Geocoding successful:', results[0].formatted_address);
         } else {
           // reject the promise if geocoding fails
           reject(new Error(`Geocoding failed: ${status}`));
@@ -85,7 +84,6 @@ export const getCurrentLocation = () => {
         }
       );
     } else {
-      console.log('Default location set to Vancouver, BC');
       // Default to Vancouver if geolocation not supported
       resolve({ lat: 49.2827, lng: -123.1207 });
     }
@@ -194,23 +192,22 @@ export const drawFlightPath = (map, originCoords, destinationCoords) => {
 
 // ----- Hotel Search Functionality -----
 
-// search for hotels in a specific area using the newer Place API
+// search for hotels using nearby search
 export const searchHotels = async (map, location) => {
   try {
-    console.log('Searching for hotels near:', location);
     
-    // Check if the required Place API is available
+    // check if the Places API is available
     if (!window.google || !window.google.maps) {
       console.error('Google Maps API not available');
       throw new Error('Google Maps API not available');
     }
     
-    // Import the places library using the newer API approach
+    // import the places library
     const { Place, SearchNearbyRankPreference } = await google.maps.importLibrary("places");
     
-    // Define search parameters using the newer API format
+    // define what we want to search for
     const request = {
-      // Required parameters
+      // define each field
       fields: [
         "displayName",
         "editorialSummary",
@@ -226,34 +223,35 @@ export const searchHotels = async (map, location) => {
         "reviews",
         "photos",
       ],
+      // radius is 5km
       locationRestriction: {
         center: location,
-        radius: 5000, // 5km radius
+        radius: 5000,
       },
-      // Optional parameters
-      includedPrimaryTypes: ["lodging"], // Search for lodging/hotels
+      // search for hotels with the max results possible
+      includedPrimaryTypes: ["lodging"],
       maxResultCount: 20,
+      // sort by poularity to avoid 0 star hotels
       rankPreference: SearchNearbyRankPreference.POPULARITY,
     };
     
-    // Perform the search using the newer API
+    // perform the search
     const { places } = await Place.searchNearby(request);
     
-    console.log('Found hotels:', places.length);
     
-    // Transform the results to match the format expected by the rest of the application
+    // reformat the results
     const transformedResults = places.map(place => {
-      console.log('Place data:', place); // Debug log to see raw place data
       return {
-        name: place.displayName?.text || place.displayName || "Unnamed Hotel",
+        // set fallbacks for the name and description
+        name: place.displayName?.text || place.displayName || "Hotel Name Not Available",
         place_id: place.id,
         vicinity: place.formattedAddress,
         formatted_address: place.formattedAddress,
         rating: place.rating,
         user_ratings_total: place.userRatingCount,
-        formatted_phone_number: place.nationalPhoneNumber,
-        website: place.websiteURI?.toString(),
-        editorial_summary: place.editorialSummary?.text || place.editorialSummary || "No editorial summary available",
+        formatted_phone_number: place.nationalPhoneNumber || "No phone number available",
+        website: place.websiteURI?.toString() || "No website available",
+        editorial_summary: place.editorialSummary?.text || place.editorialSummary || "No description available",
         geometry: {
           location: place.location
         },
@@ -262,59 +260,19 @@ export const searchHotels = async (map, location) => {
         } : undefined,
       };
     });
-    
-    console.log('Transformed hotel data:', transformedResults[0]); // Log first hotel for debugging
-    
+    // shows the first hotel in the console
+    // console.log('Transformed hotel data:', transformedResults[0]); 
     return transformedResults;
   } catch (error) {
+    // throw an error if the search fails
     console.error('Error searching for hotels:', error);
     throw error;
   }
 };
 
-// Get detailed information about a specific hotel
-export const getHotelDetails = async (map, placeId) => {
-  try {
-    // Create a PlacesService instance for older API compatibility
-    const service = new google.maps.places.Places(map);
-    
-    return new Promise((resolve, reject) => {
-      // Define request for place details
-      const request = {
-        placeId: placeId,
-        fields: [
-          'name', 
-          'rating', 
-          'formatted_address', 
-          'formatted_phone_number', 
-          'website', 
-          'photos', 
-          'price_level', 
-          'reviews', 
-          'url',
-          'vicinity',
-          'opening_hours'
-        ]
-      };
-      
-      // Get place details
-      service.getDetails(request, (place, status) => {
-        if (status === google.maps.places.PlacesServicesStatus.OK) {
-          resolve(place);
-        } else {
-          console.error('Failed to get hotel details with status:', status);
-          reject(new Error(`Failed to get hotel details: ${status}`));
-        }
-      });
-    });
-  } catch (error) {
-    console.error('Error getting hotel details:', error);
-    throw error;
-  }
-};
-
-// Create hotel markers on the map
+// place a marker for each hotel
 export const createHotelMarkers = (map, hotels) => {
+  // store the markers in an array
   const markers = [];
   
   hotels.forEach((hotel, index) => {
@@ -324,24 +282,22 @@ export const createHotelMarkers = (map, hotels) => {
       map: map,
       title: hotel.name,
       animation: window.google.maps.Animation.DROP,
-      // Optional: Use custom marker with lettering
+      // add a label with a letter to ID each marker
       label: {
         text: String.fromCharCode(65 + (index % 26)),
         color: 'white'
       }
     });
     
-    // Store the hotel data with the marker
+    // store the hotel data with the marker
     marker.hotelData = hotel;
-    
+    // add the marker to the array
     markers.push(marker);
   });
-  
   return markers;
 };
 
-
-// Clear all markers from the map
+// remove all markers
 export const clearMarkers = (markers) => {
   if (markers && markers.length) {
     markers.forEach(marker => {
@@ -352,13 +308,11 @@ export const clearMarkers = (markers) => {
 };
 
 
-
 // ----- Load Google Maps Script -----
 
 export const loadGoogleMapsScript = (callback) => {
   // Check if the script is being loaded
   if (window.googleMapsScriptLoading) {
-    console.log("Google Maps API script is already loading...");
     // If already loading, add this callback to be executed when loaded
     if (typeof callback === 'function') {
       window.googleMapsCallbacks = window.googleMapsCallbacks || [];
@@ -369,10 +323,8 @@ export const loadGoogleMapsScript = (callback) => {
   
   // Check if already loaded
   if (window.google && window.google.maps) {
-    console.log("Google Maps API already loaded, checking for Places API...");
     // Check if places library is available
     if (window.google.maps.places) {
-      console.log("Places API is available");
       if (typeof callback === 'function') {
         callback();
       }
@@ -391,7 +343,6 @@ export const loadGoogleMapsScript = (callback) => {
     window.googleMapsCallbacks.push(callback);
   }
 
-  console.log("Loading Google Maps API script with Places library...");
   
   // Create script element
   const script = document.createElement('script');
@@ -404,11 +355,9 @@ export const loadGoogleMapsScript = (callback) => {
   // Callback when script loads
   script.onload = () => {
     window.googleMapsScriptLoading = false;
-    console.log("Google Maps API loaded successfully");
     
     // Verify Places API is available
     if (window.google && window.google.maps && window.google.maps.places) {
-      console.log("Places API verified available");
       
       // Execute all callbacks
       if (window.googleMapsCallbacks && window.googleMapsCallbacks.length) {
