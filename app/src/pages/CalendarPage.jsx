@@ -16,7 +16,6 @@ function CalendarPage() {
     const [endDate, setEndDate] = useState(null);
     const [eventDetails, setEventDetails] = useState({ name: '', description: '', color: '#ff0000' });
     const [events, setEvents] = useState([]);
-    const [googleEvents, setGoogleEvents] = useState([]);
     const [startTime, setStartTime] = useState('00:00');
     const [endTime, setEndTime] = useState('23:59');
 
@@ -302,8 +301,25 @@ Colour: ${event.color}
     };
 
     const importEventsFromGoogleCalendar = async () => {
+        // get calendar name
+        const calendarName = prompt('Enter the name of the calendar to import events from:');
+        if (!calendarName) {
+            return;
+        }
+
+        // get the calendar ID
+        const calendarListResponse = await window.gapi.client.calendar.calendarList.list();
+        if(calendarListResponse.error) {
+            console.error('Error fetching calendar list:', calendarListResponse.error);
+            return;
+        }
+
+        const calendarList = calendarListResponse.result.items;
+        const calendar = calendarList.find(cal => cal.summary.toLowerCase() === calendarName.toLowerCase());
+            
+        // get the events from the calendar
         const request = window.gapi.client.calendar.events.list({
-            calendarId: 'primary',
+            calendarId: calendar.id,
             timeMin: new Date().toISOString(),
             maxResults: 2500,
             singleEvents: true,
@@ -356,6 +372,39 @@ Colour: ${event.color}
                 const newUniqueEvents = importedEvents.filter(e => !isDuplicate(e));
                 return [...prevEvents, ...newUniqueEvents];
             });
+        });
+    };
+
+    const shareCalendar = () => {
+        const email = prompt('Enter the email address to share your calendar with:');
+        if(!email){
+            return;
+        } else if(!email.includes('@')){
+            alert('Please enter a valid email address!');
+            return;
+        }
+
+        const resource = {
+            scope: {
+                type: 'user',
+                value: email,
+            },
+            role: 'writer',
+        };
+
+        const request = window.gapi.client.calendar.acl.insert({
+            calendarId: 'primary',
+            resource: resource,
+        });
+
+        request.execute((resp) => {
+            if (resp.error) {
+                console.error('Error sharing calendar:', resp.error);
+                alert('Error sharing calendar. Please try again.');
+            } else {
+
+                alert(`Calendar shared with ${email}`);
+            }
         });
     };
 
@@ -517,7 +566,7 @@ Colour: ${event.color}
                     </button>
                 )}
                 {authorized && (
-                    <button className="shareButton" title="Share with google">
+                    <button className="shareButton" title="Share with google" onClick={shareCalendar}>
                         Share
                     </button>
                 )}
