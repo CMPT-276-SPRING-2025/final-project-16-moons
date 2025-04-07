@@ -127,18 +127,6 @@ const createRestaurantList = (props) => {
 };
   
 
-function Restaurants() {
-  return (
-    <div className="restaurants" style={{ backgroundImage: `url(${BackgroundImage})`}}>
-      <div className="headerContainer">
-        <h1>Restaurants</h1>
-      </div>
-      <div className ="search-bar-container">
-        <SearchBar placeholder="Search for restaurants..." />
-      </div>
-    </div>
-  )
-}
 
 function Restaurants() {
   const [searchValue, setSearchValue] = useState("");
