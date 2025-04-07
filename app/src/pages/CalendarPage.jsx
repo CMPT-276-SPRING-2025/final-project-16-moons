@@ -16,9 +16,9 @@ function CalendarPage() {
     const [endDate, setEndDate] = useState(null);
     const [eventDetails, setEventDetails] = useState({ name: '', description: '', color: '#ff0000' });
     const [events, setEvents] = useState([]);
+    const [googleEvents, setGoogleEvents] = useState([]);
     const [startTime, setStartTime] = useState('00:00');
     const [endTime, setEndTime] = useState('23:59');
-    const [newEvents, setNewEvents] = useState([]);
 
     ////////////* CALENDAR MANAGEMENT *//////////////
 
@@ -188,118 +188,176 @@ Colour: ${event.color}
 
     const addEventsToGoogleCalendar = async () => {
         if (!authorized) {
-          console.error("User is not authorized.");
-          return;
+            console.error("User is not authorized.");
+            return;
         }
         // user's time zone
         const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        // loop through each event
-        for (const event of events) {
-            // check if the event is all day
-            const isAllDay =
-                event.startDate.getHours() === 0 &&
-                event.startDate.getMinutes() === 0 &&
-                event.endDate.getHours() === 23 &&
-                event.endDate.getMinutes() === 59 &&
-                event.startDate.toDateString() === event.endDate.toDateString();
 
-            const resource = {
-                summary: event.name,
-                description: event.description,
-                start: isAllDay ? {
-                    date: event.startDate.toISOString().split('T')[0],
+        // get all current events from google calendar, store in array
+        const request = window.gapi.client.calendar.events.list({
+            calendarId: 'primary',
+            timeMin: new Date().toISOString(),
+            maxResults: 2500,
+            singleEvents: true,
+            orderBy: 'startTime',
+        });
+      
+        request.execute(async (resp) => {
+            if (resp.error) {
+                console.error('Error fetching events:', resp.error);
+                return;
+            }
+            
+            // put all imported events into an array
+            const importedEvents = resp.items
+                .filter((event) => {
+                    const title = event.summary?.toLowerCase() || '';
+                    return !title.includes('birthday') && !title.includes('holiday');
+                })
+                .map((event) => {
+                    let startDate, endDate;
+                    if (event.start.dateTime) {
+                        startDate = new Date(event.start.dateTime);
+                        endDate = new Date(event.end.dateTime);
+                    } else {
+                        startDate = new Date(event.start.date);
+                        startDate.setDate(startDate.getDate() + 1);
+                        startDate.setHours(0, 0);
+                        endDate = new Date(event.end.date);
+                        endDate.setDate(endDate.getDate());
+                        endDate.setHours(23, 59);
+                    }
+      
+                    return {
+                        name: event.summary,
+                        description: event.description || '',
+                        color: '#425e68',
+                        startDate,
+                        endDate,
+                    };
+                });
+            // loop through each event
+            for (const event of events) {
+                const isInCalendar = importedEvents.some((gEvent) => {
+                    return (
+                        event.name === gEvent.name &&
+                        event.startDate.getTime() === gEvent.startDate.getTime() &&
+                        event.endDate.getTime() === gEvent.endDate.getTime()
+                    );
+                });
+
+                // check if the event is already in the calendar
+                if(isInCalendar){
+                    continue;
                 }
-                : {
-                  dateTime: event.startDate.toISOString(),
-                  timeZone: timeZone,
-                },
-                end: isAllDay ? {
-                    date: new Date(event.endDate.getTime() + 86400000) // add 1 day in ms
-                    .toISOString()
-                    .split('T')[0],
+                
+                // check if the event is all day
+                const isAllDay =
+                    event.startDate.getHours() === 0 &&
+                    event.startDate.getMinutes() === 0 &&
+                    event.endDate.getHours() === 23 &&
+                    event.endDate.getMinutes() === 59 &&
+                    event.startDate.toDateString() === event.endDate.toDateString();
+
+                const resource = {
+                    summary: event.name,
+                    description: event.description,
+                    start: isAllDay ? {
+                        date: event.startDate.toISOString().split('T')[0],
+                    }
+                    : {
+                    dateTime: event.startDate.toISOString(),
+                    timeZone: timeZone,
+                    },
+                    end: isAllDay ? {
+                        date: new Date(event.endDate.getTime())
+                        .toISOString()
+                        .split('T')[0],
+                    }
+                    : {
+                    dateTime: event.endDate.toISOString(),
+                    timeZone: timeZone,
+                    },
                 }
-                : {
-                  dateTime: event.endDate.toISOString(),
-                  timeZone: timeZone,
-                },
-          }
-          await new Promise((resolve, reject) => {
-            const request = window.gapi.client.calendar.events.insert({
-              calendarId: 'primary',
-              resource: resource,
-            });
-            request.execute((resp) => {
-              if (resp.error) {
-                console.error('Error creating event:', resp.error);
-                reject(resp.error);
-              } else {
-                console.log('Event created: ' + resp.htmlLink);
-                resolve(resp);
-              }
-            });
-          });
-        }
-        alert('Events have been uploaded to your Google Calendar!');
-        window.open('https://calendar.google.com/calendar', '_blank');
+                await new Promise((resolve, reject) => {
+                    const request = window.gapi.client.calendar.events.insert({
+                        calendarId: 'primary',
+                        resource: resource,
+                    });
+                    request.execute((resp) => {
+                        if (resp.error) {
+                            console.error('Error creating event:', resp.error);
+                            reject(resp.error);
+                        } else {
+                            console.log('Event created: ' + resp.htmlLink);
+                            resolve(resp);
+                        }
+                    });
+                });
+            }
+            alert('Events have been uploaded to your Google Calendar!');
+            window.open('https://calendar.google.com/calendar', '_blank');
+        });
     };
 
     const importEventsFromGoogleCalendar = async () => {
         const request = window.gapi.client.calendar.events.list({
-          calendarId: 'primary',
-          timeMin: new Date().toISOString(),
-          maxResults: 2500,
-          singleEvents: true,
-          orderBy: 'startTime',
+            calendarId: 'primary',
+            timeMin: new Date().toISOString(),
+            maxResults: 2500,
+            singleEvents: true,
+            orderBy: 'startTime',
         });
       
         request.execute((resp) => {
-          if (resp.error) {
-            console.error('Error fetching events:', resp.error);
-            return;
-          }
+            if (resp.error) {
+                console.error('Error fetching events:', resp.error);
+                return;
+            }
       
-          const importedEvents = resp.items
-            .filter((event) => {
-              const title = event.summary?.toLowerCase() || '';
-              return !title.includes('birthday') && !title.includes('holiday');
-            })
-            .map((event) => {
-              let startDate, endDate;
-              if (event.start.dateTime) {
-                startDate = new Date(event.start.dateTime);
-                endDate = new Date(event.end.dateTime);
-              } else {
-                startDate = new Date(event.start.date);
-                startDate.setDate(startDate.getDate() + 1);
-                startDate.setHours(0, 0);
-                endDate = new Date(event.end.date);
-                endDate.setDate(endDate.getDate() - 1);
-                endDate.setHours(23, 59);
-              }
+            const importedEvents = resp.items
+                .filter((event) => {
+                    const title = event.summary?.toLowerCase() || '';
+                    return !title.includes('birthday') && !title.includes('holiday');
+                })
+                .map((event) => {
+                    let startDate, endDate;
+                    if (event.start.dateTime) {
+                        startDate = new Date(event.start.dateTime);
+                        endDate = new Date(event.end.dateTime);
+                    } else {
+                        startDate = new Date(event.start.date);
+                        startDate.setDate(startDate.getDate() + 1);
+                        startDate.setHours(0, 0);
+                        endDate = new Date(event.end.date);
+                        endDate.setDate(endDate.getDate());
+                        endDate.setHours(23, 59);
+                    }
       
-              return {
-                name: event.summary,
-                description: event.description || '',
-                color: '#425e68',
-                startDate,
-                endDate,
-              };
+                    return {
+                        name: event.summary,
+                        description: event.description || '',
+                        color: '#425e68',
+                        startDate,
+                        endDate,
+                    };
+                });
+      
+            // Compare to avoid duplicates based on name and start time
+            setEvents((prevEvents) => {
+                const isDuplicate = (importedEvent) => {
+                    return prevEvents.some((existing) =>
+                        existing.name === importedEvent.name &&
+                        existing.startDate.getTime() === importedEvent.startDate.getTime()
+                    );
+                };
+      
+                const newUniqueEvents = importedEvents.filter(e => !isDuplicate(e));
+                return [...prevEvents, ...newUniqueEvents];
             });
-      
-          // Compare to avoid duplicates based on name and start time
-          setEvents((prevEvents) => {
-            const isDuplicate = (importedEvent) => {
-              return prevEvents.some((existing) =>
-                existing.name === importedEvent.name &&
-                existing.startDate.getTime() === importedEvent.startDate.getTime()
-              );
-            };
-      
-            const newUniqueEvents = importedEvents.filter(e => !isDuplicate(e));
-            return [...prevEvents, ...newUniqueEvents];
-          });
         });
-      };
+    };
 
     return (
         <div className='calendar' style={{ backgroundImage: `url(${BackgroundImage})` }}>
@@ -330,17 +388,28 @@ Colour: ${event.color}
             </div>
             <div className='calendarBody'>
                 <div className='calendarContainer'>
-                    <Calendar
-                        calendarType='gregory'
-                        showNeighboringMonth={false}
-                        onClickDay={handleDateSelection}
-                        tileClassName={({ date }) =>
-                            (startDate && date.toDateString() === startDate.toDateString()) ||
-                                (endDate && date.toDateString() === endDate.toDateString())
-                                ? 'selectedDate'
-                                : ''
+                <Calendar
+                    calendarType='gregory'
+                    showNeighboringMonth={false}
+                    onClickDay={handleDateSelection}
+                    tileClassName={({ date }) => {
+                        if (startDate && endDate) {
+                            const dateOnly = date.setHours(0, 0);
+                            const startDateOnly = new Date(startDate).setHours(0, 0);
+                            const endDateOnly = new Date(endDate).setHours(0, 0);
+                            if (dateOnly >= startDateOnly && dateOnly <= endDateOnly) {
+                                return 'selectedRange';
+                            }
+                        } else if (startDate) {
+                            const dateOnly = date.setHours(0, 0);
+                            const startDateOnly = new Date(startDate).setHours(0, 0);
+                            if (dateOnly === startDateOnly) {
+                                return 'selectedRange';
+                            }
                         }
-                    />
+                        return '';
+                    }}
+                />
                 </div>
 
                 {startDate && endDate && (

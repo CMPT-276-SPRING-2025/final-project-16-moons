@@ -292,7 +292,7 @@
     text-decoration: underline;
 }
 
-.selectedDate {
+.selectedRange {
     background-color: #FFEE8C !important; /*highlight selected date*/
     color: #000 !important;
 }
