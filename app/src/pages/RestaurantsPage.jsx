@@ -3,7 +3,7 @@
   import BackgroundImage from '../assets/restaurants-background.jpeg';
   import '../styles/restaurants.css';
   import { SearchBar } from "../components/SearchBar";
-  import { useState } from "react";
+  import { useState, useEffect, useRef } from "react";
   import { 
     loadGoogleMapsScript, 
     initializeMap, 
@@ -263,7 +263,7 @@ function Restaurants() {
   const handleRestaurantClick = (restaurant, index) => {
     if (!mapRef.current) return;
     // set the selected restaurant/store
-    setSelectedRestaurant(rstaurant);
+    setSelectedRestaurant(restaurant);
     if (markers[index]) {
       try {
         // center and zoom in on the set restaurant/store
