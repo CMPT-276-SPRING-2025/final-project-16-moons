@@ -33,7 +33,6 @@ export const geocodeCity = async (cityName) => {
             formattedAddress: results[0].formatted_address,
             placeId: results[0].place_id
           });
-          console.log('Geocoding successful:', results[0].formatted_address);
         } else {
           // reject the promise if geocoding fails
           reject(new Error(`Geocoding failed: ${status}`));
@@ -85,14 +84,13 @@ export const getCurrentLocation = () => {
         }
       );
     } else {
-      console.log('Default location set to Vancouver, BC');
       // Default to Vancouver if geolocation not supported
       resolve({ lat: 49.2827, lng: -123.1207 });
     }
   });
 };
 
-// mock data
+// mock flight data
 export const getFlightData = async (originCoords, destinationCoords, destinationName) => {
   // Simulate API call delay
   await new Promise(resolve => setTimeout(resolve, 1000));
@@ -155,7 +153,7 @@ export const getFlightData = async (originCoords, destinationCoords, destination
   };
 };
 
-// helper func (haversine formula)
+// helper func (haversine formula) to find distance
 const calculateDistance = (point1, point2) => {
   // earth's radius in km
   const R = 6371;
@@ -192,11 +190,129 @@ export const drawFlightPath = (map, originCoords, destinationCoords) => {
   return flightPath;
 };
 
-// load google maps script
+// ----- Hotel Search Functionality -----
+
+// search for hotels using nearby search
+export const searchHotels = async (map, location) => {
+  try {
+    
+    // check if the Places API is available
+    if (!window.google || !window.google.maps) {
+      console.error('Google Maps API not available');
+      throw new Error('Google Maps API not available');
+    }
+    
+    // import the places library
+    const { Place, SearchNearbyRankPreference } = await google.maps.importLibrary("places");
+    
+    // define what we want to search for
+    const request = {
+      // define each field
+      fields: [
+        "displayName",
+        "editorialSummary",
+        "formattedAddress", 
+        "location", 
+        "rating", 
+        "userRatingCount", 
+        "businessStatus", 
+        "regularOpeningHours", 
+        "id",
+        "nationalPhoneNumber",
+        "websiteURI",
+        "reviews",
+        "photos",
+      ],
+      // radius is 5km
+      locationRestriction: {
+        center: location,
+        radius: 5000,
+      },
+      // search for hotels with the max results possible
+      includedPrimaryTypes: ["lodging"],
+      maxResultCount: 20,
+      // sort by poularity to avoid 0 star hotels
+      rankPreference: SearchNearbyRankPreference.POPULARITY,
+    };
+    
+    // perform the search
+    const { places } = await Place.searchNearby(request);
+    
+    
+    // reformat the results
+    const transformedResults = places.map(place => {
+      return {
+        // set fallbacks for the name and description
+        name: place.displayName?.text || place.displayName || "Hotel Name Not Available",
+        place_id: place.id,
+        vicinity: place.formattedAddress,
+        formatted_address: place.formattedAddress,
+        rating: place.rating,
+        user_ratings_total: place.userRatingCount,
+        formatted_phone_number: place.nationalPhoneNumber || "No phone number available",
+        website: place.websiteURI?.toString() || "No website available",
+        editorial_summary: place.editorialSummary?.text || place.editorialSummary || "No description available",
+        geometry: {
+          location: place.location
+        },
+        opening_hours: place.regularOpeningHours ? {
+          open_now: place.regularOpeningHours.isOpen
+        } : undefined,
+      };
+    });
+    // shows the first hotel in the console
+    // console.log('Transformed hotel data:', transformedResults[0]); 
+    return transformedResults;
+  } catch (error) {
+    // throw an error if the search fails
+    console.error('Error searching for hotels:', error);
+    throw error;
+  }
+};
+
+// place a marker for each hotel
+export const createHotelMarkers = (map, hotels) => {
+  // store the markers in an array
+  const markers = [];
+  
+  hotels.forEach((hotel, index) => {
+    // Create marker for each hotel
+    const marker = new window.google.maps.Marker({
+      position: hotel.geometry.location,
+      map: map,
+      title: hotel.name,
+      animation: window.google.maps.Animation.DROP,
+      // add a label with a letter to ID each marker
+      label: {
+        text: String.fromCharCode(65 + (index % 26)),
+        color: 'white'
+      }
+    });
+    
+    // store the hotel data with the marker
+    marker.hotelData = hotel;
+    // add the marker to the array
+    markers.push(marker);
+  });
+  return markers;
+};
+
+// remove all markers
+export const clearMarkers = (markers) => {
+  if (markers && markers.length) {
+    markers.forEach(marker => {
+      marker.setMap(null);
+    });
+  }
+  return [];
+};
+
+
+// ----- Load Google Maps Script -----
+
 export const loadGoogleMapsScript = (callback) => {
   // Check if the script is being loaded
   if (window.googleMapsScriptLoading) {
-    console.log("Google Maps API script is loading...");
     // If already loading, add this callback to be executed when loaded
     if (typeof callback === 'function') {
       window.googleMapsCallbacks = window.googleMapsCallbacks || [];
@@ -207,8 +323,15 @@ export const loadGoogleMapsScript = (callback) => {
   
   // Check if already loaded
   if (window.google && window.google.maps) {
-    if (typeof callback === 'function') {
-      callback();
+    // Check if places library is available
+    if (window.google.maps.places) {
+      if (typeof callback === 'function') {
+        callback();
+      }
+    } else {
+      console.error("Places API is not available despite Maps being loaded - attempting to load it");
+      // Try loading the script with places library explicitly
+      // loadPlacesLibrary(callback);
     }
     return;
   }
@@ -220,29 +343,42 @@ export const loadGoogleMapsScript = (callback) => {
     window.googleMapsCallbacks.push(callback);
   }
 
+  
   // Create script element
   const script = document.createElement('script');
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&libraries=places,marker&loading=async`;
+  
+  // Explicitly include the places library
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&libraries=places&loading=async`;
   script.async = true;
   script.defer = true;
   
   // Callback when script loads
   script.onload = () => {
     window.googleMapsScriptLoading = false;
-    console.log("Google Maps API loaded");
     
-    // Execute all callbacks
-    if (window.googleMapsCallbacks && window.googleMapsCallbacks.length) {
-      window.googleMapsCallbacks.forEach(cb => {
-        if (typeof cb === 'function') {
-          cb();
-        }
-      });
-      window.googleMapsCallbacks = [];
+    // Verify Places API is available
+    if (window.google && window.google.maps && window.google.maps.places) {
+      
+      // Execute all callbacks
+      if (window.googleMapsCallbacks && window.googleMapsCallbacks.length) {
+        window.googleMapsCallbacks.forEach(cb => {
+          if (typeof cb === 'function') {
+            cb();
+          }
+        });
+        window.googleMapsCallbacks = [];
+      }
     }
+  };
+  
+  // Handle load errors
+  script.onerror = (error) => {
+    window.googleMapsScriptLoading = false;
+    console.error("Failed to load Google Maps API:", error);
   };
 
   // add script to document
   document.head.appendChild(script);
 };
+
 

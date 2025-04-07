@@ -60,26 +60,6 @@ function Flights() {
     };
   }, []);
 
-  // initialize the map
-  const initMap = () => {
-    // only initialize map if it doesn't exist
-    if (!mapRef.current) {
-      // create new google map instance in mapcontainer
-      const mapElement = document.getElementsByClassName('map-container');
-      if (!mapElement) {
-        console.error('Map container element not found');
-        return NULL;
-      }
-      const newMap = initializeMap('map-container');
-      // update the map state
-      setMap(newMap);
-      mapRef.current = newMap;
-      return newMap;
-    }
-    // return existing map instance if exists
-    return mapRef.current;
-  };
-
   // handle searching for a city
   const handleSearch = async (cityName) => {
     // show the loading popup
@@ -88,7 +68,7 @@ function Flights() {
     setError(null);
     setFlightData(null);
     
-    // First set hasSearched to true to ensure the map container is rendered
+    // set hasSearched to true to ensure the map container is rendered
     setHasSearched(true);
     
     // If we don't have the current location yet, get it first
@@ -97,7 +77,6 @@ function Flights() {
         const coords = await getCurrentLocation();
         setCurrentLocation(coords);
       } catch (locationErr) {
-        console.error('Error getting current location:', locationErr);
         // Allow the search to continue with default location
       }
     }
@@ -173,12 +152,10 @@ function Flights() {
           mapInstance.setCenter(geoData.coordinates);
         } else {
           // Handle case where currentLocation is still not available
-          console.warn('Current location not available for flight path');
-          setError('Unable to get your current location. Some features may be limited.');
+          setError('Unable to get your current location. Please try again.');
         }
       } catch (err) {
         // handle errors
-        console.error('Error searching for city:', err);
         setError('Failed to find the specified city. Please try again.');
       } finally {
         // hide the loading popup when done
