@@ -211,7 +211,21 @@ export const searchHotels = async (map, location) => {
     // Define search parameters using the newer API format
     const request = {
       // Required parameters
-      fields: ["displayName", "formattedAddress", "location", "rating", "userRatingCount", "businessStatus", "regularOpeningHours", "photos", "id"],
+      fields: [
+        "displayName",
+        "editorialSummary",
+        "formattedAddress", 
+        "location", 
+        "rating", 
+        "userRatingCount", 
+        "businessStatus", 
+        "regularOpeningHours", 
+        "id",
+        "nationalPhoneNumber",
+        "websiteURI",
+        "reviews",
+        "photos",
+      ],
       locationRestriction: {
         center: location,
         radius: 5000, // 5km radius
@@ -219,7 +233,7 @@ export const searchHotels = async (map, location) => {
       // Optional parameters
       includedPrimaryTypes: ["lodging"], // Search for lodging/hotels
       maxResultCount: 20,
-      rankPreference: SearchNearbyRankPreference.DISTANCE,
+      rankPreference: SearchNearbyRankPreference.POPULARITY,
     };
     
     // Perform the search using the newer API
@@ -228,21 +242,28 @@ export const searchHotels = async (map, location) => {
     console.log('Found hotels:', places.length);
     
     // Transform the results to match the format expected by the rest of the application
-    const transformedResults = places.map(place => ({
-      name: place.displayName?.text || place.name,
-      place_id: place.id,
-      vicinity: place.formattedAddress,
-      formatted_address: place.formattedAddress,
-      rating: place.rating,
-      user_ratings_total: place.userRatingCount,
-      geometry: {
-        location: place.location
-      },
-      opening_hours: place.regularOpeningHours ? {
-        open_now: place.regularOpeningHours.isOpen
-      } : undefined,
-      photos: place.photos
-    }));
+    const transformedResults = places.map(place => {
+      console.log('Place data:', place); // Debug log to see raw place data
+      return {
+        name: place.displayName?.text || place.displayName || "Unnamed Hotel",
+        place_id: place.id,
+        vicinity: place.formattedAddress,
+        formatted_address: place.formattedAddress,
+        rating: place.rating,
+        user_ratings_total: place.userRatingCount,
+        formatted_phone_number: place.nationalPhoneNumber,
+        website: place.websiteURI?.toString(),
+        editorial_summary: place.editorialSummary?.text || place.editorialSummary || "No editorial summary available",
+        geometry: {
+          location: place.location
+        },
+        opening_hours: place.regularOpeningHours ? {
+          open_now: place.regularOpeningHours.isOpen
+        } : undefined,
+      };
+    });
+    
+    console.log('Transformed hotel data:', transformedResults[0]); // Log first hotel for debugging
     
     return transformedResults;
   } catch (error) {
@@ -319,49 +340,6 @@ export const createHotelMarkers = (map, hotels) => {
   return markers;
 };
 
-// Show info window when marker is clicked
-export const addInfoWindowToMarker = (map, marker, hotel, callback) => {
-  const infoWindow = new window.google.maps.InfoWindow();
-  
-  // Add click listener to marker
-  marker.addListener('click', async () => {
-    try {
-      // Get hotel details using the updated method
-      const details = await getHotelDetails(map, hotel.place_id);
-      
-      // Create content for info window
-      const content = `
-        <div class="info-window">
-          <h3>${details.name}</h3>
-          <p>${details.vicinity || details.formatted_address}</p>
-          ${details.rating ? `<p>Rating: ${details.rating} ⭐</p>` : ''}
-          ${details.formatted_phone_number ? `<p>Phone: ${details.formatted_phone_number}</p>` : ''}
-          ${details.website ? `<p><a href="${details.website}" target="_blank">Website</a></p>` : ''}
-        </div>
-      `;
-      
-      infoWindow.setContent(content);
-      infoWindow.open({
-        anchor: marker,
-        map,
-      });
-      
-      // Execute callback if provided (e.g., to highlight hotel in list)
-      if (callback && typeof callback === 'function') {
-        callback(hotel);
-      }
-    } catch (error) {
-      console.error('Error showing info window:', error);
-      infoWindow.setContent(`<div>Error loading details</div>`);
-      infoWindow.open({
-        anchor: marker,
-        map,
-      });
-    }
-  });
-  
-  return infoWindow;
-};
 
 // Clear all markers from the map
 export const clearMarkers = (markers) => {
@@ -441,19 +419,6 @@ export const loadGoogleMapsScript = (callback) => {
         });
         window.googleMapsCallbacks = [];
       }
-    } else {
-      console.error("Places API not available after script load - attempting to load it explicitly");
-      // loadPlacesLibrary(() => {
-      //   // Execute all callbacks after places is loaded
-      //   if (window.googleMapsCallbacks && window.googleMapsCallbacks.length) {
-      //     window.googleMapsCallbacks.forEach(cb => {
-      //       if (typeof cb === 'function') {
-      //         cb();
-      //       }
-      //     });
-      //     window.googleMapsCallbacks = [];
-      //   }
-      // });
     }
   };
   
@@ -467,25 +432,4 @@ export const loadGoogleMapsScript = (callback) => {
   document.head.appendChild(script);
 };
 
-// Helper function to load the Places library explicitly if needed
-// const loadPlacesLibrary = (callback) => {
-//   console.log("Attempting to load Places library explicitly");
-//   const script = document.createElement('script');
-//   script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&libraries=places&loading=async`;
-//   script.async = true;
-//   script.defer = true;
-  
-//   script.onload = () => {
-//     console.log("Places library loaded successfully");
-//     if (typeof callback === 'function') {
-//       callback();
-//     }
-//   };
-  
-//   script.onerror = (error) => {
-//     console.error("Failed to load Places library:", error);
-//   };
-  
-//   document.head.appendChild(script);
-// };
 

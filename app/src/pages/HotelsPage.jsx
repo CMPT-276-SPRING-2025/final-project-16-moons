@@ -10,7 +10,6 @@
     geocodeCity, 
     searchHotels, 
     createHotelMarkers,
-    addInfoWindowToMarker,
     clearMarkers
   } from '../services/maps';
 
@@ -63,39 +62,43 @@ const renderHotelsList = (props) => {
               </div>
               
               <div className="hotel-details">
-                <p className="hotel-address">{formatAddress(hotel)}</p>
+                <div className="hotel-info-main">
+                  <p className="hotel-address">{formatAddress(hotel)}</p>
+                  
+                  <div className="hotel-summary">
+                    <span className="info-label">Description: </span> {hotel.editorial_summary}
+                  </div>
+                  
+                  {hotel.opening_hours ? (
+                    <div className="hotel-open">
+                      <span className="info-label">Status: </span> 
+                      {hotel.opening_hours.open_now ? 
+                        <span className="open">Open Now</span> : 
+                        <span className="closed">Closed</span>}
+                    </div>
+                  ) : (
+                    <div className="hotel-open">
+                      <span className="info-label">Status: </span> 
+                      <span className="unknown">Hours not available</span>
+                    </div>
+                  )}
+                </div>
                 
                 <div className="hotel-contact-info">
                   {hotel.formatted_phone_number && (
                     <p className="hotel-phone">
-                      <span className="info-label">Phone:</span> {hotel.formatted_phone_number}
+                      <span className="info-label">Phone: </span> {hotel.formatted_phone_number}
                     </p>
                   )}
                   
                   {hotel.website && (
                     <p className="hotel-website">
-                      <span className="info-label">Website:</span> 
-                      <a href={hotel.website} target="_blank" rel="noopener noreferrer" 
-                         onClick={(e) => e.stopPropagation()}>
-                        Visit website
+                      <a className="info-label" href={hotel.website} target="_blank" onClick={(e) => e.stopPropagation()}>
+                        Visit Website
                       </a>
                     </p>
                   )}
                 </div>
-                
-                {hotel.opening_hours ? (
-                  <div className="hotel-open">
-                    <span className="info-label">Status:</span> 
-                    {hotel.opening_hours.open_now ? 
-                      <span className="open">Open Now</span> : 
-                      <span className="closed">Closed</span>}
-                  </div>
-                ) : (
-                  <div className="hotel-open">
-                    <span className="info-label">Status:</span> 
-                    <span className="unknown">Hours not available</span>
-                  </div>
-                )}
               </div>
             </li>
           ))}
@@ -221,7 +224,7 @@ function Hotels() {
       
       // Center map on the city
       mapInstance.setCenter(coordinates);
-      mapInstance.setZoom(14);
+      mapInstance.setZoom(13);
       
       // Search for hotels near this location
       console.log("Searching for hotels at coordinates:", coordinates);
@@ -244,14 +247,6 @@ function Hotels() {
         try {
           // Create markers for each hotel
           const newMarkers = createHotelMarkers(mapInstance, hotelsData);
-          
-          // Add info windows to markers
-          newMarkers.forEach((marker, index) => {
-            addInfoWindowToMarker(mapInstance, marker, hotelsData[index], (hotel) => {
-              setSelectedHotel(hotel);
-            });
-          });
-          
           setMarkers(newMarkers);
         } catch (markerErr) {
           console.error("Error creating markers:", markerErr);
@@ -286,9 +281,7 @@ function Hotels() {
       try {
         // Center map on this hotel
         mapRef.current.setCenter(hotel.geometry.location);
-        
-        // Simulate marker click
-        window.google.maps.event.trigger(markers[index], 'click');
+        mapRef.current.setZoom(16);
       } catch (error) {
         console.error("Error handling hotel click:", error);
       }
