@@ -29,7 +29,7 @@ jobs:
         run: npm install
         working-directory: app
 
-      - name: Run Hotel Tests
+      - name: Run Unit/Integration Tests
         run: npm run test
         env:
           NODE_ENV: production
