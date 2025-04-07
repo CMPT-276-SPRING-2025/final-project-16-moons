@@ -289,7 +289,7 @@ function Restaurants() {
       {/* search bar container */}
       <div className={`search-bar-container ${hasSearched && (loading || error) ? 'search-bar-top' : ''}`}>
         <SearchBar 
-          placeholder="Search for a city to find restaurants/stores..." 
+          placeholder="Search for a city to find restaurants..." 
           onSearch={handleSearch}
         />
       </div>
