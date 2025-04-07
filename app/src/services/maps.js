@@ -308,6 +308,114 @@ export const clearMarkers = (markers) => {
 };
 
 
+
+// ------ Restaurant Search Functions -------
+
+export const searchRestaurants = async (map, location) => {
+  try {
+   
+    // check if the Places API is available
+    if (!window.google || !window.google.maps) {
+      console.error('Google Maps API not available');
+      throw new Error('Google Maps API not available');
+    }
+   
+    // import the places library
+    const { Place, SearchNearbyRankPreference } = await google.maps.importLibrary("places");
+   
+    // define what we want to search for
+    const request = {
+      // define each field
+      fields: [
+        "displayName",
+        "editorialSummary",
+        "formattedAddress",
+        "location",
+        "rating",
+        "userRatingCount",
+        "businessStatus",
+        "regularOpeningHours",
+        "id",
+        "nationalPhoneNumber",
+        "websiteURI",
+        "reviews",
+        "photos",
+      ],
+      // radius is 5km
+      locationRestriction: {
+        center: location,
+        radius: 5000,
+      },
+      // search for restaurants/food stores with the max results possible
+      includedPrimaryTypes: ["restaurant", "supermarket", "convenience_store"],
+      maxResultCount: 20,
+      // sort by popularity to avoid 0 star restaurants/ food stores
+      rankPreference: SearchNearbyRankPreference.POPULARITY,
+    };
+   
+    // perform the search
+    const { places } = await Place.searchNearby(request);
+   
+   
+    // reformat the results
+    const transformedResults = places.map(place => {
+      return {
+        // set fallbacks for the name and description
+        name: place.displayName?.text || place.displayName || " Name Not Available",
+        place_id: place.id,
+        vicinity: place.formattedAddress,
+        formatted_address: place.formattedAddress,
+        rating: place.rating,
+        user_ratings_total: place.userRatingCount,
+        formatted_phone_number: place.nationalPhoneNumber || "No phone number available",
+        website: place.websiteURI?.toString() || "No website available",
+        editorial_summary: place.editorialSummary?.text || place.editorialSummary || "No description available",
+        geometry: {
+          location: place.location
+        },
+        opening_hours: place.regularOpeningHours ? {
+          open_now: place.regularOpeningHours.isOpen
+        } : undefined,
+      };
+    });
+    // shows the first restaurant/store in the console
+    // console.log('Transformed restaurant/store data:', transformedResults[0]);
+    return transformedResults;
+  } catch (error) {
+    // throw an error if the search fails
+    console.error('Error searching for restaurants/stores:', error);
+    throw error;
+  }
+};
+
+// place a marker for each retaurant/store
+export const createRestaurantMarkers = (map, restaurants) => {
+  // store the markers in an array
+  const markers = [];
+  
+  restaurants.forEach((restaurant, index) => {
+    // Create marker for each restaurant/store
+    const marker = new window.google.maps.Marker({
+      position: restaurant.geometry.location,
+      map: map,
+      title: restaurant.name,
+      animation: window.google.maps.Animation.DROP,
+      // add a label with a letter to ID each marker
+      label: {
+        text: String.fromCharCode(65 + (index % 26)),
+        color: 'white'
+      }
+    });
+    
+    // store the restaurant/store data with the marker
+    marker.restaurantData = restaurant;
+    // add the marker to the array
+    markers.push(marker);
+  });
+  return markers;
+};
+
+
 // ----- Load Google Maps Script -----
 
 export const loadGoogleMapsScript = (callback) => {
