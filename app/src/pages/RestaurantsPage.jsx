@@ -33,7 +33,7 @@ const createRestaurantList = (props) => {
         <p>Found <span className="restaurant-count">{restaurants.length}</span> restaurants and food shops</p>
         
         {/* list of restaurants */}
-        <ul className="restaurants-results">
+        <ul className="restaurant-results">
           {restaurants.map((restaurant, index) => (
             // create a list item for each restaurant/store
             <li 
