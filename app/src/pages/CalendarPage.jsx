@@ -18,6 +18,7 @@ function CalendarPage() {
     const [events, setEvents] = useState([]);
     const [startTime, setStartTime] = useState('00:00');
     const [endTime, setEndTime] = useState('23:59');
+    const [newEvents, setNewEvents] = useState([]);
 
     ////////////* CALENDAR MANAGEMENT *//////////////
 
@@ -243,57 +244,62 @@ Colour: ${event.color}
     };
 
     const importEventsFromGoogleCalendar = async () => {
-        // request specifications
         const request = window.gapi.client.calendar.events.list({
-            calendarId: 'primary',
-            timeMin: new Date().toISOString(),
-            maxResults: 10,
-            singleEvents: true,
-            orderBy: 'startTime',
+          calendarId: 'primary',
+          timeMin: new Date().toISOString(),
+          maxResults: 2500,
+          singleEvents: true,
+          orderBy: 'startTime',
         });
-        
-        // fetch the events
+      
         request.execute((resp) => {
-            if (resp.error) {
-                console.error('Error fetching events:', resp.error);
-                return;
-            }
-    
-            const importedEvents = resp.items
-                // don't import birthdays or holidays
-                .filter((event) => {
-                    const title = event.summary?.toLowerCase() || '';
-                    return !title.includes('birthday') && !title.includes('holiday');
-                })
-
-                // format google calendar events to match our format
-                .map((event) => {
-                    let startDate, endDate;
-                    
-                    // check if event if all day
-                    if (event.start.dateTime) { // all day event
-                        startDate = new Date(event.start.dateTime);
-                        endDate = new Date(event.end.dateTime);
-                    } else { // normal event
-                        startDate = new Date(event.start.date);
-                        startDate.setHours(0, 0);
-                        endDate = new Date(event.end.date);
-                        endDate.setDate(endDate.getDate() - 1);
-                        endDate.setHours(23, 59);
-                    }
-        
-                    return {
-                        name: event.summary,
-                        description: event.description || '',
-                        color: '#425e68',
-                        startDate,
-                        endDate,
-                    };
+          if (resp.error) {
+            console.error('Error fetching events:', resp.error);
+            return;
+          }
+      
+          const importedEvents = resp.items
+            .filter((event) => {
+              const title = event.summary?.toLowerCase() || '';
+              return !title.includes('birthday') && !title.includes('holiday');
+            })
+            .map((event) => {
+              let startDate, endDate;
+              if (event.start.dateTime) {
+                startDate = new Date(event.start.dateTime);
+                endDate = new Date(event.end.dateTime);
+              } else {
+                startDate = new Date(event.start.date);
+                startDate.setDate(startDate.getDate() + 1);
+                startDate.setHours(0, 0);
+                endDate = new Date(event.end.date);
+                endDate.setDate(endDate.getDate() - 1);
+                endDate.setHours(23, 59);
+              }
+      
+              return {
+                name: event.summary,
+                description: event.description || '',
+                color: '#425e68',
+                startDate,
+                endDate,
+              };
             });
-    
-            setEvents((prevEvents) => [...prevEvents, ...importedEvents]);
+      
+          // Compare to avoid duplicates based on name and start time
+          setEvents((prevEvents) => {
+            const isDuplicate = (importedEvent) => {
+              return prevEvents.some((existing) =>
+                existing.name === importedEvent.name &&
+                existing.startDate.getTime() === importedEvent.startDate.getTime()
+              );
+            };
+      
+            const newUniqueEvents = importedEvents.filter(e => !isDuplicate(e));
+            return [...prevEvents, ...newUniqueEvents];
+          });
         });
-    };
+      };
 
     return (
         <div className='calendar' style={{ backgroundImage: `url(${BackgroundImage})` }}>
