@@ -347,7 +347,7 @@ export const searchRestaurants = async (map, location) => {
         radius: 5000,
       },
       // search for restaurants/food stores with the max results possible
-      includedPrimaryTypes: ["restaurant", "supermarket", "convenience_store"],
+      includedPrimaryTypes: ["restaurant", "supermarket", "convenience_store", "bakery", "cafe"],
       maxResultCount: 20,
       // sort by popularity to avoid 0 star restaurants/ food stores
       rankPreference: SearchNearbyRankPreference.POPULARITY,
