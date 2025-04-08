@@ -316,7 +316,10 @@ Colour: ${event.color}
         const calendarName = prompt('Enter the name of the calendar to import events from.\nPress enter for primary calendar');
         let calendarId;
 
-        if (!calendarName) { // no input, use primary calendar
+        if(calendarName === null){ // cancel
+            return;
+        }
+        else if (calendarName === '') { // no input, use primary calendar
             calendarId = 'primary';
         } else { // calendar name
             // get the calendar ID
