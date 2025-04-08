@@ -9,7 +9,7 @@ function Home() {
       <div className="headerContainer">
         <h1>Jack of All Travel</h1>
         <p>The solution to all your travel needs.</p>
-        <Link>
+        <Link to='/flights'>
           <button> Plan Your Trip </button>
         </Link>
       </div>

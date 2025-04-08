@@ -1,0 +1,76 @@
+name: Vercel Production Deployment
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+
+  Test-Production:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies From Root
+        run: npm install
+
+      - name: Install Dependencies From App
+        run: npm install
+        working-directory: app
+
+      - name: Run Unit/Integration Tests
+        run: npm run test
+        env:
+          NODE_ENV: production
+        working-directory: app
+
+  Deploy-Production:
+    needs: [Test-Production]
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies From Root
+        run: npm install
+
+      - name: Install Dependencies From App
+        run: npm install
+        working-directory: app
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel
+        working-directory: app
+      
+      - name: Create .env file
+        run: |
+          echo "VITE_GOOGLE_CALENDAR_API_KEY=${{ secrets.CALENDAR_API_KEY }}" >> .env
+          echo "VITE_GOOGLE_MAPS_API_KEY=${{ secrets.MAPS_API_KEY }}" >> .env
+        working-directory: app
+
+      - name: Pull Vercel Environment Variables
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: app
+
+      - name: Build Project Artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: app
+
+      - name: Deploy Project Artifacts  
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: app

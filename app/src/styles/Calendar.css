@@ -71,6 +71,7 @@
     color: #000;
 }
 
+
 .react-calendar__navigation {
     background: #425e68;
     align-items: center;
@@ -109,14 +110,12 @@
     margin-bottom: 10px;
 }
 
-
 .calendarBody {
     display: flex;
     gap: 20px;
 }
 
 /* FORM STYLING */
-
 .eventForm{
     display: flex;
     flex-direction: column;
@@ -212,7 +211,6 @@
 }
 
 /*EVENT LIST*/
-
 .eventsList {
     height: 380px;
     max-height: 380px;
