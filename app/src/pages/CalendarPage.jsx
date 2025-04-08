@@ -41,6 +41,12 @@ function CalendarPage() {
             start.setHours(...startTime.split(':').map(Number));
             const end = new Date(endDate);
             end.setHours(...endTime.split(':').map(Number));
+            
+            if(end <= start){
+                alert('End time must be after start time!');
+                handleCancel();
+                return;
+            }
             const newEvent = {
                 ...eventDetails,
                 color: eventDetails.color,
@@ -62,6 +68,8 @@ function CalendarPage() {
     const handleCancel = () => {
         setStartDate(null);
         setEndDate(null);
+        setStartTime('00:00');
+        setEndTime('23:59');
         setEventDetails({ name: '', description: '', color: '#ff0000' });
     };
 
