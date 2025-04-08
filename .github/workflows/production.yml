@@ -13,7 +13,33 @@ on:
       - main
 
 jobs:
+
+  Test-Production:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies From Root
+        run: npm install
+
+      - name: Install Dependencies From App
+        run: npm install
+        working-directory: app
+
+      - name: Run Unit/Integration Tests
+        run: npm run test
+        env:
+          NODE_ENV: production
+        working-directory: app
+
   Deploy-Production:
+    needs: [Test-Production]
     runs-on: ubuntu-latest
     steps:
 
