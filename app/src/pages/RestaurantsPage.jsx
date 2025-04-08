@@ -29,7 +29,7 @@ const createRestaurantList = (props) => {
     <div className="restaurants-results-container">
       <div className="restaurants-list">
         {/* title and count of restaurants */}
-        <h2>Restaurants and Foods shops in {destination ? destination.name : 'this location'}</h2>
+        <h2>Restaurants and Foods Shops in {destination ? destination.name : 'this location'}</h2>
         <p>Found <span className="restaurant-count">{restaurants.length}</span> restaurants and food shops</p>
         
         {/* list of restaurants */}
