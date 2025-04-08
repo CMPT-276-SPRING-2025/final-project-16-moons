@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import React, { useState, useEffect } from 'react';
 import BackgroundImage from '../assets/calendar-background.jpg';
 import Calendar from 'react-calendar';
 import ColorLensIcon from '@mui/icons-material/ColorLens';
@@ -138,7 +137,7 @@ Colour: ${event.color}
                     return updatedEvents.sort((a, b) => a.startDate - b.startDate);
                 });
             } catch (error) {
-                alert('Error parsing file content. Please make sure the file is correctly formatted.');
+                alert(`Error parsing file content: ${error.message}`);
                 console.error("Import Error:", error);
             }
 
@@ -156,7 +155,7 @@ Colour: ${event.color}
             
             // check if the section has the correct number of lines 
             if (lines.length < 5) {
-                throw new Error(`Invalid event format at event ${index + 1}`);
+                throw new Error(`Invalid event format at event ${index + 1}: Expected at least 5 lines.`);
             }
 
             // take the information
@@ -175,6 +174,17 @@ Colour: ${event.color}
                 throw new Error(`Invalid date format in event ${index + 1}`);
             }
 
+            // check if the event has a description
+            if (description == 'Description:') {
+                // return the event without description
+                return {
+                    name,
+                    color: colour,
+                    startDate,
+                    endDate
+                };
+            }
+
             // return the event
             return {
                 name,
@@ -185,7 +195,6 @@ Colour: ${event.color}
             };
         });
     };
-    
 
     const addEventsToGoogleCalendar = async () => {
         if (!authorized) {
@@ -304,24 +313,26 @@ Colour: ${event.color}
 
     const importEventsFromGoogleCalendar = async () => {
         // get calendar name
-        const calendarName = prompt('Enter the name of the calendar to import events from:');
-        if (!calendarName) {
-            return;
-        }
+        const calendarName = prompt('Enter the name of the calendar to import events from.\nPress enter for primary calendar');
+        let calendarId;
 
-        // get the calendar ID
-        const calendarListResponse = await window.gapi.client.calendar.calendarList.list();
-        if(calendarListResponse.error) {
-            console.error('Error fetching calendar list:', calendarListResponse.error);
-            return;
-        }
+        if (!calendarName) { // no input, use primary calendar
+            calendarId = 'primary';
+        } else { // calendar name
+            // get the calendar ID
+            const calendarListResponse = await window.gapi.client.calendar.calendarList.list();
+            if(calendarListResponse.error) {
+                console.error('Error fetching calendar list:', calendarListResponse.error);
+                return;
+            }
 
-        const calendarList = calendarListResponse.result.items;
-        const calendar = calendarList.find(cal => cal.summary.toLowerCase() === calendarName.toLowerCase());
+            const calendarList = calendarListResponse.result.items;
+            calendarId = calendarList.find(cal => cal.summary.toLowerCase() === calendarName.toLowerCase())?.id;
+        }
             
         // get the events from the calendar
         const request = window.gapi.client.calendar.events.list({
-            calendarId: calendar.id,
+            calendarId: calendarId,
             timeMin: new Date().toISOString(),
             maxResults: 2500,
             singleEvents: true,
@@ -330,6 +341,7 @@ Colour: ${event.color}
       
         request.execute((resp) => {
             if (resp.error) {
+                alert('Error finding calendar. Please check the name and try again.');
                 console.error('Error fetching events:', resp.error);
                 return;
             }
