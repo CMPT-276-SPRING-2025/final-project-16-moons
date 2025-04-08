@@ -72,7 +72,6 @@
   transform: translateY(33px);
 }
 
-
 /* Hotel results container */
 
 .hotels-list h2 {
@@ -145,7 +144,6 @@
   font-weight: bold;
   margin-right: 15px;
 }
-
 .hotel-rating-container {
   text-align: right;
 }

@@ -24,6 +24,10 @@ const createHotelsList = (props) => {
     formatAddress 
   } = props;
   
+  const now = new Date();
+  const curHour = now.getHours();
+  const isBusinessHours = curHour >= 9 && curHour <= 17;
+
   return (
     // container for the hotels list
     <div className="hotels-results-container">
@@ -88,7 +92,7 @@ const createHotelsList = (props) => {
                     <div className="hotel-open">
                       <span className="info-label">Status: </span> 
                       {/* if hotel open now display open */}
-                      {hotel.opening_hours.open_now ? 
+                      {isBusinessHours? 
                         <span className="open">Open Now</span> : 
                         // if hotel is closed display closed
                         <span className="closed">Closed</span>}

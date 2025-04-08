@@ -300,24 +300,9 @@ async function testFlightSearchWorkflow() {
   }
 }
 
-// Function to run all tests
-function runFlightTests() {
-  console.log("=== Running Flight Feature Tests ===");
-  
-  // Run unit tests
-  testGeocodeCity();
-  testGetCurrentLocation();
-  
-  // Run integration test
-  testFlightSearchWorkflow();
-  
-  console.log("=== Flight Tests Complete ===");
-}
-
 // Export tests for CI/CD pipeline
 export {
   testGeocodeCity,
   testGetCurrentLocation,
-  testFlightSearchWorkflow,
-  runFlightTests
+  testFlightSearchWorkflow
 };

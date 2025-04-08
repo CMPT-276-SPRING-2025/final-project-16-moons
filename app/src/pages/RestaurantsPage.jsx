@@ -23,6 +23,10 @@ const createRestaurantList = (props) => {
     handleRestaurantClick, 
     formatAddress 
   } = props;
+
+  const now = new Date();
+  const curHour = now.getHours();
+  const isBusinessHours = curHour >= 11 && curHour <= 21;
   
   return (
     // container for the restaurants/stores list
@@ -88,7 +92,7 @@ const createRestaurantList = (props) => {
                     <div className="restaurant-open">
                       <span className="info-label">Status: </span> 
                       {/* if restaurant/store is open now displays open */}
-                      {restaurant.opening_hours.open_now ? 
+                      {isBusinessHours ? 
                         <span className="open">Open Now</span> : 
                         // if restaurant/store is closed display closed
                         <span className="closed">Closed</span>}

@@ -1,14 +1,14 @@
 // --- Unit Test ---
 
 /**
- * Tests the searchHotels function by mocking the Google Maps Places API response
- * and verifying the transformation of hotel data is correct.
+ * Tests the searchRestaurants function by mocking the Google Maps Places API response
+ * and verifying the transformation of restaurant data is correct.
  * 
  * This test verifies that the function properly transforms the raw Places API
- * response into our application's standardized hotel format.
+ * response into our application's standardized restaurant format.
  */
-async function testSearchHotels() {
-  console.log("Running: testSearchHotels");
+async function testSearchRestaurants() {
+  console.log("Running: testSearchRestaurants");
 
   try {
     // create a mock for the google maps object
@@ -19,14 +19,14 @@ async function testSearchHotels() {
     
     // create a mock for the place data
     const mockPlaceData = {
-      displayName: { text: "Test Hotel" },
+      displayName: { text: "Test Restaurant" },
       id: "test-place-id-123",
       formattedAddress: "123 Test Street, Vancouver",
       rating: 4.5,
       userRatingCount: 100,
       nationalPhoneNumber: "+1 (555) 123-4567",
-      websiteURI: { toString: () => "https://testhotel.com" },
-      editorialSummary: { text: "A lovely test hotel" },
+      websiteURI: { toString: () => "https://testrestaurant.com" },
+      editorialSummary: { text: "A lovely test restaurant" },
       location: { lat: 49.2827, lng: -123.1207 },
       regularOpeningHours: { isOpen: true }
     };
@@ -47,26 +47,26 @@ async function testSearchHotels() {
       }
     };
     
-    // import the searchHotels function
-    const { searchHotels } = await import('../app/src/services/maps.js');
+    // import the searchRestaurants function
+    const { searchRestaurants } = await import('../app/src/services/maps.js');
     
     // create a mock for the map
     const mockMap = {};
     
     // call the function with the mock data
-    const result = await searchHotels(mockMap, mockLocation);
+    const result = await searchRestaurants(mockMap, mockLocation);
     
     // expected transformed data
     const expected = [{
-      name: "Test Hotel",
+      name: "Test Restaurant",
       place_id: "test-place-id-123",
       vicinity: "123 Test Street, Vancouver",
       formatted_address: "123 Test Street, Vancouver",
       rating: 4.5,
       user_ratings_total: 100,
       formatted_phone_number: "+1 (555) 123-4567",
-      website: "https://testhotel.com",
-      editorial_summary: "A lovely test hotel",
+      website: "https://testrestaurant.com",
+      editorial_summary: "A lovely test restaurant",
       geometry: {
         location: { lat: 49.2827, lng: -123.1207 }
       },
@@ -81,32 +81,32 @@ async function testSearchHotels() {
       result[0].name === expected[0].name &&
       result[0].place_id === expected[0].place_id &&
       result[0].rating === expected[0].rating,
-      "❌ testSearchHotels failed: Data transformation incorrect"
+      "❌ testSearchRestaurants failed: Data transformation incorrect"
     );
     
-    console.log("✅ testSearchHotels passed");
+    console.log("✅ testSearchRestaurants passed");
     
     // restore the original google object
     window.google = originalGoogle;
   } catch (error) {
-    console.error("❌ testSearchHotels failed", error);
+    console.error("❌ testSearchRestaurants failed", error);
   }
 }
 
 // --- Integration Test ---
 
 /**
- * Tests the hotel search functionality of the HotelsPage component by simulating
+ * Tests the restaurant search functionality of the RestaurantsPage component by simulating
  * a search and verifying the proper interaction between components and services.
  * 
  * This test checks that:
  * 1. The search triggers geocoding correctly
- * 2. Hotel search is performed with the correct parameters
- * 3. Hotel markers are created
- * 4. The hotel list is populated with the search results
+ * 2. Restaurant search is performed with the correct parameters
+ * 3. Restaurant markers are created
+ * 4. The restaurant list is populated with the search results
  */
-async function testHotelSearchWorkflow() {
-  console.log("Running: testHotelSearchWorkflow");
+async function testRestaurantSearchWorkflow() {
+  console.log("Running: testRestaurantSearchWorkflow");
   
   try {
     // create a mock for the google maps object
@@ -114,12 +114,12 @@ async function testHotelSearchWorkflow() {
     // create mock search results
     const mockSearchResults = [
       {
-        name: "Grand Hotel",
+        name: "Test Restaurant",
         place_id: "place-123",
         vicinity: "123 Main St",
         rating: 4.7,
         user_ratings_total: 235,
-        editorial_summary: "Luxury hotel in downtown",
+        editorial_summary: "Delicious food in downtown",
         geometry: {
           location: { lat: 49.2827, lng: -123.1207 }
         },
@@ -133,8 +133,8 @@ async function testHotelSearchWorkflow() {
     const mapsService = await import('../app/src/services/maps.js');
     const originalFunctions = {
       geocodeCity: mapsService.geocodeCity,
-      searchHotels: mapsService.searchHotels,
-      createHotelMarkers: mapsService.createHotelMarkers,
+      searchRestaurants: mapsService.searchRestaurants,
+      createRestaurantMarkers: mapsService.createRestaurantMarkers,
       initializeMap: mapsService.initializeMap
     };
     
@@ -149,12 +149,12 @@ async function testHotelSearchWorkflow() {
       formattedAddress: "Vancouver, BC, Canada"
     });
     
-    mapsService.searchHotels = async (map, coordinates) => mockSearchResults;
+    mapsService.searchRestaurants = async (map, coordinates) => mockSearchResults;
     
-    mapsService.createHotelMarkers = (map, hotels) => 
-      hotels.map((hotel, index) => ({
+    mapsService.createRestaurantMarkers = (map, restaurants) => 
+      restaurants.map((restaurant, index) => ({
         setMap: () => {},
-        hotelData: hotel
+        restaurantData: restaurant
       }));
     
     // mock the document and dom elements
@@ -170,10 +170,10 @@ async function testHotelSearchWorkflow() {
     // Import React components (assuming they're available)
     const React = await import('react');
     const ReactDOM = await import('react-dom');
-    const { default: HotelsPage } = await import('../app/src/pages/HotelsPage.jsx');
+    const { default: RestaurantsPage } = await import('../app/src/pages/RestaurantsPage.jsx');
     
     const hookStates = {
-      hotels: [],
+      restaurants: [],
       loading: false,
       error: "",
       destination: null
@@ -190,10 +190,10 @@ async function testHotelSearchWorkflow() {
       // assert expected outcomes
       console.assert(
         mockSearchResults.length === 1,
-        "❌ testHotelSearchWorkflow failed: Wrong number of hotel results"
+        "❌ testRestaurantSearchWorkflow failed: Wrong number of restaurant results"
       );
       
-      console.log("✅ testHotelSearchWorkflow passed");
+      console.log("✅ testRestaurantSearchWorkflow passed");
     } finally {
       // clean up
       document.body.removeChild(testContainer);
@@ -207,13 +207,12 @@ async function testHotelSearchWorkflow() {
       window.google = originalGoogleMaps;
     }
   } catch (error) {
-    console.error("❌ testHotelSearchWorkflow failed", error);
+    console.error("❌ testRestaurantSearchWorkflow failed", error);
   }
 }
 
 // Export tests for CI/CD pipeline
 export { 
-  testSearchHotels, 
-  testHotelSearchWorkflow
+  testSearchRestaurants, 
+  testRestaurantSearchWorkflow
 };
-

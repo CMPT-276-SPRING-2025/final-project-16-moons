@@ -190,7 +190,7 @@ export const drawFlightPath = (map, originCoords, destinationCoords) => {
   return flightPath;
 };
 
-// ----- Hotel Search Functionality -----
+// ----- Hotel Search Functions -----
 
 // search for hotels using nearby search
 export const searchHotels = async (map, location) => {
@@ -306,8 +306,6 @@ export const clearMarkers = (markers) => {
   }
   return [];
 };
-
-
 
 // ------ Restaurant Search Functions -------
 

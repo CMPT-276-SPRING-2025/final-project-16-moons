@@ -1,19 +1,20 @@
 // Test script for CI/CD pipeline
 
-// Import tests
+// import test functions
 import { testSearchHotels, testHotelSearchWorkflow } from './hotelsTest.js';
 import { testGeocodeCity, testGetCurrentLocation, testFlightSearchWorkflow } from './flightsTest.js';
+import { testSearchRestaurants, testRestaurantSearchWorkflow } from './restaurantsTest.js';
 
 async function runTests() {
-  console.log('===== Starting Feature Tests =====');
+  console.log('===== Starting API Feature Tests =====');
   
   let allTestsPassed = true;
   
-  // Run Hotel Tests
-  console.log('\n===== Running Hotel Tests =====');
+  // run Hotel Tests
+  console.log('\n===== Running Hotel Feature Tests =====');
   
   try {
-    // Run hotel unit test
+    // run hotel unit test
     console.log('\nRunning unit test: testSearchHotels');
     await testSearchHotels();
     console.log('✅ Hotel unit test passed');
@@ -23,7 +24,7 @@ async function runTests() {
   }
   
   try {
-    // Run hotel integration test
+    // run hotel integration test
     console.log('\nRunning integration test: testHotelSearchWorkflow');
     await testHotelSearchWorkflow();
     console.log('✅ Hotel integration test passed');
@@ -32,11 +33,11 @@ async function runTests() {
     allTestsPassed = false;
   }
   
-  // Run Flight Tests
-  console.log('\n===== Running Flight Tests =====');
+  // run Flight Tests
+  console.log('\n===== Running Flight Feature Tests =====');
   
   try {
-    // Run geocodeCity unit test
+    // run geocodeCity unit test
     console.log('\nRunning unit test: testGeocodeCity');
     await testGeocodeCity();
     console.log('✅ GeocodeCity unit test passed');
@@ -46,7 +47,7 @@ async function runTests() {
   }
   
   try {
-    // Run getCurrentLocation unit test
+    // run getCurrentLocation unit test
     console.log('\nRunning unit test: testGetCurrentLocation');
     await testGetCurrentLocation();
     console.log('✅ GetCurrentLocation unit test passed');
@@ -56,7 +57,7 @@ async function runTests() {
   }
   
   try {
-    // Run flight integration test
+    // run flight integration test
     console.log('\nRunning integration test: testFlightSearchWorkflow');
     await testFlightSearchWorkflow();
     console.log('✅ Flight integration test passed');
@@ -65,7 +66,30 @@ async function runTests() {
     allTestsPassed = false;
   }
   
-  // Exit with appropriate status code
+  // run Restaurant Tests
+  console.log('\n===== Running Restaurant Feature Tests =====');
+  
+  try {
+    // run restaurant unit test
+    console.log('\nRunning unit test: testSearchRestaurants');
+    await testSearchRestaurants();
+    console.log('✅ Restaurant unit test passed');
+  } catch (error) {
+    console.error('❌ Restaurant unit test failed:', error);
+    allTestsPassed = false;
+  }
+  
+  try {
+    // run restaurant integration test
+    console.log('\nRunning integration test: testRestaurantSearchWorkflow');
+    await testRestaurantSearchWorkflow();
+    console.log('✅ Restaurant integration test passed');
+  } catch (error) {
+    console.error('❌ Restaurant integration test failed:', error);
+    allTestsPassed = false;
+  }
+  
+  // exit with appropriate status code
   if (!allTestsPassed) {
     console.error('\n❌ Some tests failed');
     process.exit(1);
