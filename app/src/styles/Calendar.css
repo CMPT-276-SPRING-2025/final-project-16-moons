@@ -1,3 +1,4 @@
+/* CALENDAR STYLING */
 .calendar {
     width: 100vw;
     height: 100vh;
@@ -13,13 +14,39 @@
     padding: 0;
 }
 
+.calendar .headerContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.googleLogo {
+    margin-right: 10px;
+}
+
+.headerContainer p {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    margin-top: 0%;
+}
+
+.calendar .headerContainer .googleSignInButton {
+    top: 5px;
+    right: 10px;
+    width: fit-content;
+    margin-bottom: 20px;
+    background-color: #b2d4e0;
+    color: #425e68;
+}
+
 .calendarContainer {
     display: flex;
     justify-content: center;
     align-items: center;
     width: 400px; 
     height: 400px;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: #b2d4e0;
     border-radius: 20px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
@@ -30,9 +57,13 @@
     align-items: center;
     border: none;
     background: transparent;
-    color: #fff;
+    color: #425e68;
     font-size: 1rem;
     border-radius: 15px;
+}
+
+.react-calendar__tile {
+    background-color: #425e68;
 }
 
 .react-calendar__tile--now {
@@ -40,19 +71,35 @@
     color: #000;
 }
 
-.react-calendar__tile--active {
-    background-color: #2196F3;
-    color: #fff;
-}
 
 .react-calendar__navigation {
-    background: #b2d4e0;
+    background: #425e68;
     align-items: center;
     display: flex;
     justify-content: center;
     flex-direction: row;
     border-radius: 10px;
     margin-bottom: 10px;
+}
+
+.react-calendar__navigation__label {
+    color: #fff;
+    background-color: #425e68;
+    font-weight: bold;
+    flex-grow: 0;
+}
+
+.react-calendar__navigation__arrow {
+    background-color: #425e68;
+    color: #fff;
+    border-radius: 8px;        
+    padding: 5px 10px;
+    border: none;
+}
+
+.react-calendar__navigation__arrow:hover {
+    background-color: #C1E1C1;
+    color: #000;
 }
 
 .react-calendar__month-view__weekdays {
@@ -63,17 +110,12 @@
     margin-bottom: 10px;
 }
 
-.react-calendar__navigation__label {
-    color: #fff;
-    font-weight: bold;
-    flex-grow: 0;
-}
-
 .calendarBody {
     display: flex;
     gap: 20px;
 }
 
+/* FORM STYLING */
 .eventForm{
     display: flex;
     flex-direction: column;
@@ -87,8 +129,8 @@
 
 .eventForm input,
 .eventForm textarea {
-    width: 100%;
-    height: 40px;
+    width: 90%;
+    height: 30px;
     margin-bottom: 10px; 
     padding: 10px;
     border: 2px solid #425e68;
@@ -98,19 +140,54 @@
     font-size: 1rem;
 }
 
-.colorPickerContainer {
+.timePickerContainer {
+    align-items: center;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: flex-start;
-    margin-bottom: 10px;
+    margin-bottom: 0px;    
     width: 100%;
     border-radius: 5px;
 }
 
-.colorPickerContainer label {
-    margin-bottom: 5px;
+.timePickerContainer input {
+    height: 20px;
+    width: 90%;
+}
+
+.timePickerContainer .startTime {
+    margin-right: 40px;
+}
+
+.timePickerContainer label {
     font-weight: bold;
-    color: #333;
+    font-size: 0.85rem;
+    color: #425e68;
+}
+
+.colorPickerContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    border-radius: 5px;
+}
+
+.colorPickerContainer .colorButton {
+    background-color: transparent;
+}
+
+.colorPickerContainer svg {
+    font-size: 50px;
+}
+
+.colorPickerContainer label {
+    font-size: 0.95rem;
+    font-weight: bold;
+    color: #425e68;
+    margin-bottom: 10px;
+    margin-right: 20px;
+    margin-left: 20px;
 }
 
 .eventForm button {
@@ -122,6 +199,18 @@
     cursor: pointer;
 }
 
+.eventForm .cancelButton {
+    margin-top: 10px;
+    background: none;
+    border: none;
+    color:#425e68;
+}
+
+.eventForm .cancelButton:hover {
+    text-decoration: underline;
+}
+
+/*EVENT LIST*/
 .eventsList {
     height: 380px;
     max-height: 380px;
@@ -131,6 +220,29 @@
     border-radius: 10px;
     width: 300px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.eventsList .eventsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.eventsList .eventsHeader .clearAllButton {
+    background-color: #425e68;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.eventsList .eventsHeader .clearAllButton:hover {
+    background-color: #7698a4;
+}
+
+.eventsList h2 {
+    color: #425e68;
 }
 
 /* scrollbar styling */
@@ -153,9 +265,95 @@
     border-radius: 5px;
     margin-bottom: 10px;
     color: #fff;
+    position: relative;
 }
 
-.selectedDate {
+.eventsList .eventItem .deleteButton {
+    position: absolute;
+    top: 5px;
+    right: 15px;
+    background: transparent;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.eventsList .eventItem .deleteButton:hover {
+    text-decoration: underline;
+}
+
+.selectedRange {
     background-color: #FFEE8C !important; /*highlight selected date*/
     color: #000 !important;
+}
+
+.shareImportButtonsContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.shareImportButtonsContainer button {
+    background-color: #425e68;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 1.75rem;
+    margin-top: 10px;
+}
+
+.headerContainer .loggedInButtons {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.loggedInButtons .logoutButton {
+    background-color: #425e68;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 1.75rem;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.loggedInButtons .addToCalendarButton {
+    background-color: #b2d4e0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    color: #425e68;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.loggedInButtons .importFromCalendarButton {
+    background-color: #b2d4e0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    color: #425e68;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }

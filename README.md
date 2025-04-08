@@ -1,5 +1,4 @@
 # Jack of All Travel
-
 ## Overview
 
 Jack of All Travel is a travel application that consolidates all your planning/vacation needs into one convenient place. Eliminating the need to switch between multiple different applications making your trip details easy to track. Equipped with the functionality to create shared calendars and access mapping features using the Google Calendar and Google Maps APIs. 
@@ -57,3 +56,4 @@ Follow these steps to set up and run the project locally:
 - **Deployed Website**: [jack-of-all-travel-vercel.app](https://jack-of-all-travel.vercel.app/)
 - **Project Report**: [Link to be added]
 - **Demo Video**: [Link to be added]
+
