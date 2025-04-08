@@ -138,7 +138,6 @@ Colour: ${event.color}
                 });
             } catch (error) {
                 alert(`Error parsing file content: ${error.message}`);
-                console.error("Import Error:", error);
             }
 
             e.target.value = '';
@@ -155,7 +154,7 @@ Colour: ${event.color}
             
             // check if the section has the correct number of lines 
             if (lines.length < 5) {
-                throw new Error(`Invalid event format at event ${index + 1}: Expected at least 5 lines.`);
+                throw new Error(`Invalid event format at event ${index + 1}, Expected at least 5 lines.`);
             }
 
             // take the information
@@ -192,7 +191,6 @@ Colour: ${event.color}
 
     const addEventsToGoogleCalendar = async () => {
         if (!authorized) {
-            console.error("User is not authorized.");
             return;
         }
         // user's time zone
@@ -209,7 +207,7 @@ Colour: ${event.color}
       
         request.execute(async (resp) => {
             if (resp.error) {
-                console.error('Error fetching events:', resp.error);
+                alert('Error fetching events from Google Calendar. Ensure you have allowed access to your calendars.');
                 return;
             }
             
@@ -291,10 +289,8 @@ Colour: ${event.color}
                     });
                     request.execute((resp) => {
                         if (resp.error) {
-                            console.error('Error creating event:', resp.error);
                             reject(resp.error);
                         } else {
-                            console.log('Event created: ' + resp.htmlLink);
                             resolve(resp);
                         }
                     });
@@ -316,7 +312,7 @@ Colour: ${event.color}
             // get the calendar ID
             const calendarListResponse = await window.gapi.client.calendar.calendarList.list();
             if(calendarListResponse.error) {
-                console.error('Error fetching calendar list:', calendarListResponse.error);
+                alert('Error fetching calendar list. Please try again.');
                 return;
             }
 
@@ -336,7 +332,6 @@ Colour: ${event.color}
         request.execute((resp) => {
             if (resp.error) {
                 alert('Error finding calendar. Please check the name and try again.');
-                console.error('Error fetching events:', resp.error);
                 return;
             }
       
@@ -407,7 +402,6 @@ Colour: ${event.color}
 
         request.execute((resp) => {
             if (resp.error) {
-                console.error('Error sharing calendar:', resp.error);
                 alert('Error sharing calendar. Please try again.');
             } else {
 

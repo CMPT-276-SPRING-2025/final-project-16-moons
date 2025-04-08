@@ -65,7 +65,6 @@ function useGoogleAuth() {
     if (!tokenClient) return;
     tokenClient.callback = async (resp) => {
       if (resp.error) {
-        console.error(resp);
         return;
       }
       setAuthorized(true);
@@ -77,7 +76,7 @@ function useGoogleAuth() {
         // set userName to name returned
         setUserName(userInfoResponse.result.name);
       } catch (err) {
-        console.error('Failed to fetch user info:', err);
+        setUserName('')
       }
     };
 
