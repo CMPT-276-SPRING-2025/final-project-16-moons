@@ -41,7 +41,7 @@ function CalendarPage() {
             start.setHours(...startTime.split(':').map(Number));
             const end = new Date(endDate);
             end.setHours(...endTime.split(':').map(Number));
-            
+
             if(end <= start){
                 alert('End time must be after start time!');
                 handleCancel();
@@ -179,6 +179,8 @@ Colour: ${event.color}
             // make sure the dates are valid
             if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
                 throw new Error(`Invalid date format in event ${index + 1}`);
+            } else if(endDate <= startDate){
+                throw new Error(`End date must be after start date in event ${index + 1}`);
             }
 
             // correct description event had no description
