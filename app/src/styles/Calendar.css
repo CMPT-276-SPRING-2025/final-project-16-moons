@@ -292,7 +292,7 @@
     text-decoration: underline;
 }
 
-.selectedDate {
+.selectedRange {
     background-color: #FFEE8C !important; /*highlight selected date*/
     color: #000 !important;
 }
@@ -312,4 +312,50 @@
     cursor: pointer;
     font-size: 1.75rem;
     margin-top: 10px;
+}
+
+.headerContainer .loggedInButtons {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.loggedInButtons .logoutButton {
+    background-color: #425e68;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 1.75rem;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.loggedInButtons .addToCalendarButton {
+    background-color: #b2d4e0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    color: #425e68;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.loggedInButtons .importFromCalendarButton {
+    background-color: #b2d4e0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    color: #425e68;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
