@@ -160,7 +160,7 @@ Colour: ${event.color}
 
             // take the information
             const name = lines[0].replace('Event: ', '').trim();
-            const description = lines[1].replace('Description: ', '').trim();
+            let description = lines[1].replace('Description: ', '').trim();
             const startDateStr = lines[2].replace('Start Date: ', '').trim();
             const endDateStr = lines[3].replace('End Date: ', '').trim();
             const colour = lines[4].replace('Colour: ', '').trim();
@@ -174,15 +174,9 @@ Colour: ${event.color}
                 throw new Error(`Invalid date format in event ${index + 1}`);
             }
 
-            // check if the event has a description
-            if (description == 'Description:') {
-                // return the event without description
-                return {
-                    name,
-                    color: colour,
-                    startDate,
-                    endDate
-                };
+            // correct description event had no description
+            if(description == 'Description:') {
+                description = '';
             }
 
             // return the event
@@ -433,11 +427,11 @@ Colour: ${event.color}
                             <button onClick={signOut} className='logoutButton'>
                                 Logout
                             </button>
-                            <button className='addToCalendarButton' onClick={addEventsToGoogleCalendar}>
+                            <button className='addToCalendarButton' onClick={addEventsToGoogleCalendar} title="Add events to your primary Google Calendar">
                                 <CalendarMonthIcon/>
                                 Add Events to Google Calendar
                             </button>
-                            <button className="importFromCalendarButton" onClick={importEventsFromGoogleCalendar}>
+                            <button className="importFromCalendarButton" onClick={importEventsFromGoogleCalendar} title="Import events from specified Google Calendar">
                                 <CalendarMonthIcon/>
                                 Import Events from Google Calendar
                             </button>
@@ -580,7 +574,7 @@ Colour: ${event.color}
                     </button>
                 )}
                 {authorized && (
-                    <button className="shareButton" title="Share with google" onClick={shareCalendar}>
+                    <button className="shareButton" title="Share primary calendar" onClick={shareCalendar}>
                         Share
                     </button>
                 )}
