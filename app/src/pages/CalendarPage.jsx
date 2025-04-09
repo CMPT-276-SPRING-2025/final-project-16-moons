@@ -313,7 +313,7 @@ Colour: ${event.color}
 
     const importEventsFromGoogleCalendar = async () => {
         // get calendar name
-        const calendarName = prompt('Enter the name of the calendar to import events from.\nPress enter for primary calendar');
+        const calendarName = prompt('Enter the name of the calendar to import events from.\nPress enter for primary calendar\nIf you want to add a calendar shared with you, enter the email of the calendar owner.');
         let calendarId;
 
         if(calendarName === null){ // cancel
