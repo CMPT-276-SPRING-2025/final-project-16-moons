@@ -261,7 +261,6 @@ export const searchHotels = async (map, location) => {
       };
     });
     // shows the first hotel in the console
-    // console.log('Transformed hotel data:', transformedResults[0]); 
     return transformedResults;
   } catch (error) {
     // throw an error if the search fails
@@ -377,7 +376,6 @@ export const searchRestaurants = async (map, location) => {
       };
     });
     // shows the first restaurant/store in the console
-    // console.log('Transformed restaurant/store data:', transformedResults[0]);
     return transformedResults;
   } catch (error) {
     // throw an error if the search fails
@@ -437,7 +435,6 @@ export const loadGoogleMapsScript = (callback) => {
     } else {
       console.error("Places API is not available despite Maps being loaded - attempting to load it");
       // Try loading the script with places library explicitly
-      // loadPlacesLibrary(callback);
     }
     return;
   }
