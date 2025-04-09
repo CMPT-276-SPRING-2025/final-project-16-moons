@@ -54,6 +54,7 @@ Follow these steps to set up and run the project locally:
 ## Project Links
 
 - **Deployed Website**: [jack-of-all-travel-vercel.app](https://jack-of-all-travel.vercel.app/)
-- **Project Report**: [Link to be added]
+- **Project Report**: [Milestone 2 Report](https://docs.google.com/document/d/1R4Ckt0MOT7_6cGL6fIvBVCqUkESy_Q-EId9BKNa-Pgo/edit?tab=t.aa0yu44ut9wr)
 - **Demo Video**: [Link to be added]
+- **Presentation Video**: [Link to be added]
 
